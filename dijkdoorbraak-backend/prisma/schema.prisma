@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Scenario {
+  id            String        @id @default(uuid())
+  title         String
+  description   String?
+  Injects       Inject[]
+  sessions      Session[]
+  createdAt     DateTime      @default(now())
+}
+
+model Inject {
+  id            String        @id @default(uuid())
+  scenario      Scenario      @relation(fields: [scenarioId], references: [id])
+  scenarioId    String
+  title         String
+  content       String
+  triggerTime   Int
+  targetRole    String?
+  createdAt     DateTime      @default(now())
+}
+
+model Session {
+  id            String        @id @default(uuid())
+  scenario      Scenario      @relation(fields: [scenarioId], references: [id])
+  scenarioId    String
+  status        SessionStatus @default(LOBBY)
+  joinCode      String @unique
+  players       Player[]
+  createdAt     DateTime      @default(now())
+  startedAt     DateTime?
+  endedAt       DateTime?
+}
+
+model Player {
+  id            String        @id @default(uuid())
+  session       Session       @relation(fields: [sessionId], references: [id])
+  sessionId     String
+  nickname      String
+  role          String?
+  decisions     Decision[]
+  joinedAt      DateTime      @default(now())
+}
+
+model Decision {
+  id            String        @id @default(uuid())
+  player        Player        @relation(fields: [playerId], references: [id])
+  playerId      String
+  injectId      String
+  choice        String
+  timestamp     DateTime      @default(now())
+}
+
+enum SessionStatus {
+  LOBBY
+  RUNNING
+  ENDED
+}
+
+
+
+
+
