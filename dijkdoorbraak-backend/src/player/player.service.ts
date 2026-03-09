@@ -48,22 +48,25 @@ export class PlayerService {
     return player;
   }
 
-  async assignRole(playerId: string, role: string) {
-    const player = await this.prisma.db.player.findUnique({
-      where: { id: playerId },
-    });
+  async assignRole(playerId: string, roleId: string) {
+  const player = await this.prisma.db.player.findUnique({
+    where: { id: playerId },
+  });
+  if (!player) throw new NotFoundException('Player not found');
 
-    if (!player) throw new NotFoundException("Player not found");
-
-    return this.prisma.db.player.update({
-      where: { id: playerId },
-      data: { role },
-    });
-  }
+  return this.prisma.db.player.update({
+    where: { id: playerId },
+    data: {
+      role: { connect: { id: roleId } },
+    },
+    include: { role: true },
+  });
+}
 
   async getPlayerInSession(sessionId: string) {
     return this.prisma.db.player.findMany({
       where: { sessionId },
+      include: { role: true },
       orderBy: { joinedAt: "asc" },
     });
   }

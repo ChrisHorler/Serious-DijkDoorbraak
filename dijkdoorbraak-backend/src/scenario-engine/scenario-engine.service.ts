@@ -49,7 +49,7 @@ export class ScenarioEngineService {
     if (inject.targetRole) {
       // Deliver only to players with matching targetRole
       const players = await this.playerService.getPlayerInSession(sessionId);
-      const targets = players.filter((p) => p.role === inject.targetRole);
+      const targets = players.filter((p) => p.role?.shortName === inject.targetRole);
 
       for (const player of targets) {
         this.io.to(sessionId).emit("inject_received", {
