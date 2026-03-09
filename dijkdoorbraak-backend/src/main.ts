@@ -9,6 +9,11 @@ import { ScenarioEngineService } from "./scenario-engine/scenario-engine.service
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors({
+    origin: ['http://localhost:3002', 'http://localhost:3000'],
+    credentials: true,
+  })
+
 
   await app.listen(3001);
 
@@ -30,10 +35,8 @@ async function bootstrap() {
     socket.on("join_lobby", async (data, callback) => {
       console.log("join_lobby received:", data);
       try {
-        const player = await playerService.joinSession(
-          data.joinCode,
-          data.nickname,
-        );
+        const player = await playerService.joinSession(data.joinCode, data.nickname);
+        await playerService.updateSocketId(player.id, socket.id)
         socket.join(player.sessionId);
         socket.data.playerId = player.id;
         socket.data.sessionId = player.sessionId;
@@ -124,9 +127,34 @@ async function bootstrap() {
       }
     });
 
-    socket.on("disconnect", () => {
+    socket.on('rejoin_lobby', async (data) => {
+      const { sessionId, playerId } = data;
+      socket.join(sessionId);
+      socket.data.playerId = playerId;
+      socket.data.sessionid = sessionId;
+      try {
+        await playerService.updateSocketId(playerId, socket.id);
+        console.log(`Player ${playerId} rejoined room ${sessionId}`);
+      } catch {
+        console.log(`Player ${playerId} not found on rejoin, already removed`);
+      }
+    })
+    
+    socket.on("disconnect", async () => {
       console.log("Client disconnected:", socket.id);
-    });
+
+      const player = await playerService.findPlayerBySocketId(socket.id);
+      if (!player) return;
+
+      // Only remove player if session is still in lobby
+      const session = await sessionService.getSession(player.sessionId);
+      if (session?.status === SessionStatus.LOBBY) {
+        // Mark as offline instead of deleting
+        await playerService.clearSocketId(socket.id);
+        
+      }
+    })
+
   });
 }
 bootstrap();
