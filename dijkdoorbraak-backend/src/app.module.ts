@@ -5,6 +5,8 @@ import { SessionModule } from "./session/session.module";
 import { PlayerModule } from "./player/player.module";
 import { InjectModule } from "./inject/inject.module";
 import { ScenarioEngineModule } from "./scenario-engine/scenario-engine.module";
+import { RoleModule } from './role/role.module';
+import { DecisionModule } from './decision/decision.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { ScenarioEngineModule } from "./scenario-engine/scenario-engine.module";
     PlayerModule,
     InjectModule,
     ScenarioEngineModule,
+    RoleModule,
+    DecisionModule,
   ],
 })
 export class AppModule {}
