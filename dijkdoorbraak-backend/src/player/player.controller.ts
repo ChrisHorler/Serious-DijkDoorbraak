@@ -24,10 +24,7 @@ export class PlayerController {
   }
 
   @Patch(":id/role")
-  assignRole(
-    @Param("id") id: string,
-    @Body("role") role: string,
-  ) {
-    return this.playerService.assignRole(id, role);
+  assingRole(@Param("id") id: string, @Body('roleId') roleId: string ) {
+    return this.playerService.assignRole(id, roleId);
   }
 }

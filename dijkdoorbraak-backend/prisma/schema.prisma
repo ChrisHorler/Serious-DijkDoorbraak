@@ -47,6 +47,7 @@ model Player {
   nickname  String
   role      Role?      @relation(fields: [roleId], references: [id])
   roleId    String?
+  socketId  String?
   decisions Decision[]
   joinedAt  DateTime   @default(now())
 }

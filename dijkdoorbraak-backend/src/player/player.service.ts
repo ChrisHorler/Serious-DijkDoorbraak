@@ -63,11 +63,41 @@ export class PlayerService {
   });
 }
 
-  async getPlayerInSession(sessionId: string) {
+  async getPlayerInSession(sessionId: string){
     return this.prisma.db.player.findMany({
       where: { sessionId },
-      include: { role: true },
-      orderBy: { joinedAt: "asc" },
+      include: { role: { include: { abilities: true } } },
+    });
+  }
+
+  async updateSocketId(playerId: string, socketId: string) {
+    return this.prisma.db.player.update({
+      where: { id: playerId },
+      data: { socketId },
+    });
+  }
+
+  async removePlayerBySocketId(socketId: string) {
+    const player = await this.prisma.db.player.findFirst({
+      where: { socketId },
+    });
+    if (!player)
+      return null;
+
+    await this.prisma.db.player.delete({
+      where: { id: player.id },
+    });
+    return player;
+  }
+
+  async findPlayerBySocketId(socketId: string) {
+    return this.prisma.db.player.findFirst({ where: { socketId } });
+  }
+
+  async clearSocketId(socketId: string) {
+    return this.prisma.db.player.updateMany({
+      where: { socketId },
+      data: { socketId: null },
     });
   }
 }
