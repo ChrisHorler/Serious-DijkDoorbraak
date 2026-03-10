@@ -151,10 +151,11 @@ async function bootstrap() {
       if (session?.status === SessionStatus.LOBBY) {
         // Mark as offline instead of deleting
         await playerService.clearSocketId(socket.id);
-        
-      }
-    })
 
+        const players = await playerService.getPlayerInSession(player.sessionId);
+        io.to(player.sessionId).emit("lobby_updated", { players });
+      }
+    });
   });
 }
 bootstrap();
