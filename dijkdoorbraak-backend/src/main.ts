@@ -156,6 +156,11 @@ async function bootstrap() {
         io.to(player.sessionId).emit("lobby_updated", { players });
       }
     });
+
+    socket.on('admin_join', (data: { sessionId: string }) => {
+      socket.join(data.sessionId);
+      console.log(`Admin joined room ${data.sessionId}`);
+    });
   });
 }
 bootstrap();
