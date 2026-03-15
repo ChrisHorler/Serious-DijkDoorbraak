@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { connectSocket } from '@/lib/socket';
 import { useGameStore } from '@/lib/store';
 
-export default function JoinPage() {
+function JoinForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { setPlayer, setSession } = useGameStore();
@@ -106,5 +106,13 @@ export default function JoinPage() {
 
             </div>
         </main>
+    );
+}
+
+export default function JoinPage() {
+    return (
+        <Suspense>
+            <JoinForm />
+        </Suspense>
     );
 }
