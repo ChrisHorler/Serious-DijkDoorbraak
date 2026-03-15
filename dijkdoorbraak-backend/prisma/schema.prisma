@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Scenario {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  Injects     Inject[]
+  sessions    Session[]
+  createdAt   DateTime  @default(now())
+}
+
+model Inject {
+  id          String     @id @default(uuid())
+  scenario    Scenario   @relation(fields: [scenarioId], references: [id])
+  scenarioId  String
+  title       String
+  content     String
+  triggerTime Int
+  targetRole  String?
+  decisions   Decision[]
+  createdAt   DateTime   @default(now())
+}
+
+model Session {
+  id         String        @id @default(uuid())
+  scenario   Scenario      @relation(fields: [scenarioId], references: [id])
+  scenarioId String
+  status     SessionStatus @default(LOBBY)
+  joinCode   String        @unique
+  players    Player[]
+  decisions  Decision[]
+  createdAt  DateTime      @default(now())
+  startedAt  DateTime?
+  endedAt    DateTime?
+}
+
+model Player {
+  id        String     @id @default(uuid())
+  session   Session    @relation(fields: [sessionId], references: [id])
+  sessionId String
+  nickname  String
+  role      Role?      @relation(fields: [roleId], references: [id])
+  roleId    String?
+  socketId  String?
+  decisions Decision[]
+  joinedAt  DateTime   @default(now())
+}
+
+model Decision {
+  id            String   @id @default(uuid())
+  player        Player   @relation(fields: [playerId], references: [id])
+  playerId      String
+  session       Session  @relation(fields: [sessionId], references: [id])
+  sessionId     String
+  inject        Inject?  @relation(fields: [injectId], references: [id])
+  injectId      String?
+  ability       Ability? @relation(fields: [abilityId], references: [id])
+  abilityId     String?
+  customAction  String?
+  adminResponse String?
+  adminApproved Boolean?
+  score         Int?
+  timestamp     DateTime @default(now())
+}
+
+model Role {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  shortName   String    @unique
+  description String
+  abilities   Ability[]
+  players     Player[]
+  createdAt   DateTime  @default(now())
+}
+
+model Ability {
+  id          String     @id @default(uuid())
+  role        Role       @relation(fields: [roleId], references: [id])
+  roleId      String
+  name        String
+  description String?
+  decisions   Decision[]
+  createdAt   DateTime   @default(now())
+}
+
+enum SessionStatus {
+  LOBBY
+  RUNNING
+  ENDED
+}
