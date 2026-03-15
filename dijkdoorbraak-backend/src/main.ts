@@ -197,6 +197,12 @@ async function bootstrap() {
       }
     });
 
+    socket.on('set_overlays', (data: { sessionId: string; overlays: any[] }, callback) => {
+      if (!socket.data.isAdmin) return callback?.({ success: false, message: 'Unauthorized' });
+      io.to(data.sessionId).emit('overlays_set', { overlays: data.overlays });
+      if (callback) callback({ success: true });
+    });
+
     socket.on('stop_scenario', async (data: { sessionId: string }, callback) => {
       if (!socket.data.isAdmin) return callback?.({ success: false, message: 'Unauthorized' });
       try {

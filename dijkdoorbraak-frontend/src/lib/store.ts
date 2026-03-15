@@ -67,6 +67,7 @@ interface GameStore {
     overlays: MapOverlay[];
     addOverlay: (overlay: MapOverlay) => void;
     removeOverlay: (id: string) => void;
+    setOverlays: (overlays: MapOverlay[]) => void;
 
     // Reset
     reset: () => void;
@@ -113,6 +114,7 @@ export const useGameStore = create<GameStore>() (
                 })),
             removeOverlay: (id) =>
                 set((state) => ({ overlays: state.overlays.filter((o) => o.id !== id) })),
+            setOverlays: (overlays) => set({ overlays }),
 
             reset: () => set({
                 session: null,

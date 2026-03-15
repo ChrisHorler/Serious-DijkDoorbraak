@@ -8,7 +8,7 @@ import { useGameStore } from '@/lib/store';
 function JoinForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { setPlayer, setSession } = useGameStore();
+    const { setPlayer, setSession, setLobbyPlayers } = useGameStore();
 
     const [joinCode, setJoinCode] = useState('');
     const [nickname, setNickname] = useState('');
@@ -39,6 +39,7 @@ function JoinForm() {
                 return; 
             }
 
+            setLobbyPlayers([]);
             setPlayer(res.player);
             setSession(res.player.session);
             router.push('/player/lobby');
