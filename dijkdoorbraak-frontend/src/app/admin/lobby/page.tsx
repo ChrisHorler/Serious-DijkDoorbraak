@@ -12,6 +12,11 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:300
 export default function AdminLobbyPage() {
     const router = useRouter();
     const { authenticated, token, session, setSession, players, setPlayers, updatePlayer, roles, setRoles } = useAdminStore();
+
+    function abandonSession() {
+        setSession(null);
+        setPlayers([]);
+    }
     const [scenarios, setScenarios] = useState<any[]>([]);
     const [selectedScenario, setSelectedScenario] = useState('');
     const [creating, setCreating] = useState(false);
@@ -42,13 +47,28 @@ export default function AdminLobbyPage() {
             router.push('/admin/session');
         });
 
-        // If session exists, fetch current players
+        // If session exists, validate it is still active in the DB
         if (session) {
-            fetch(`${BACKEND_URL}/players/session/${session.id}`)
-                .then(r => r.json())
-                .then(setPlayers);
-
-            socket.emit('admin_join', { sessionId: session.id });
+            fetch(`${BACKEND_URL}/sessions/${session.id}`)
+                .then(r => {
+                    if (!r.ok) throw new Error('not found');
+                    return r.json();
+                })
+                .then((s) => {
+                    if (s.status === 'ENDED') {
+                        setSession(null);
+                        setPlayers([]);
+                    } else {
+                        fetch(`${BACKEND_URL}/players/session/${session.id}`)
+                            .then(r => r.json())
+                            .then(setPlayers);
+                        socket.emit('admin_join', { sessionId: session.id });
+                    }
+                })
+                .catch(() => {
+                    setSession(null);
+                    setPlayers([]);
+                });
         }
 
         return () => {
@@ -102,6 +122,13 @@ export default function AdminLobbyPage() {
           </div>
           {session && (
             <div className="flex items-center gap-6">
+              <button
+                onClick={abandonSession}
+                className="text-zinc-500 hover:text-red-400 text-sm transition"
+                title="Verlaat sessie"
+              >
+                Verlaat sessie
+              </button>
               <div className="text-right">
                 <p className="text-zinc-400 text-xs uppercase tracking-widest">Sessiecode</p>
                 <p className="text-4xl font-mono font-bold tracking-widest">{session.joinCode}</p>

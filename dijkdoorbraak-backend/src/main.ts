@@ -32,6 +32,12 @@ async function bootstrap() {
 
   const playerService = app.get(PlayerService);
   const sessionService = app.get(SessionService);
+
+  // Clean up any sessions left RUNNING from a previous process
+  const cleaned = await sessionService.endAllRunningSessions();
+  if (cleaned.count > 0) {
+    console.log(`Cleaned up ${cleaned.count} stale RUNNING session(s) on startup`);
+  }
   const decisionService = app.get(DecisionService);
   const injectService = app.get(InjectService);
 

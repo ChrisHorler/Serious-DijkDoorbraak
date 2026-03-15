@@ -31,7 +31,7 @@ interface AdminStore {
     setToken: (token: string) => void;
 
     session: Session | null;
-    setSession: (session: Session) => void;
+    setSession: (session: Session | null) => void;
 
     players: Player[];
     setPlayers: (players: Player[]) => void;
