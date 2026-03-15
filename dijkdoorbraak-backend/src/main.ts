@@ -11,8 +11,11 @@ import { verifyAdminToken } from "./auth/auth.controller";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',')
+    : ['http://localhost:3002', 'http://localhost:3000'];
   app.enableCors({
-    origin: ['http://localhost:3002', 'http://localhost:3000'],
+    origin: allowedOrigins,
     credentials: true,
   })
 

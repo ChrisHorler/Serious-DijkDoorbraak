@@ -61,13 +61,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Copy docker-compose.yml to VPS
+      - name: Copy files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: docker-compose.yml
+          source: "docker-compose.yml,nginx"
           target: ${{ secrets.VPS_DEPLOY_PATH }}
 
       - name: Pull images & restart stack
@@ -84,6 +84,7 @@ jobs:
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
             ADMIN_TOKEN_SECRET=${{ secrets.ADMIN_TOKEN_SECRET }}
+            CORS_ORIGIN=${{ vars.CORS_ORIGIN }}
             GITHUB_OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
             EOF
 
