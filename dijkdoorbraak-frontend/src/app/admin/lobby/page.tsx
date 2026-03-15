@@ -3,14 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdminStore } from '@/lib/adminStore';
-import { connectSocket, getSocket } from '@/lib/socket';
+import { connectAdminSocket, getSocket } from '@/lib/socket';
 import { Role } from '@/lib/store';
+import { QRCodeSVG } from 'qrcode.react';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
 export default function AdminLobbyPage() {
     const router = useRouter();
-    const { authenticated, session, setSession, players, setPlayers, updatePlayer, roles, setRoles } = useAdminStore();
+    const { authenticated, token, session, setSession, players, setPlayers, updatePlayer, roles, setRoles } = useAdminStore();
     const [scenarios, setScenarios] = useState<any[]>([]);
     const [selectedScenario, setSelectedScenario] = useState('');
     const [creating, setCreating] = useState(false);
@@ -31,7 +32,7 @@ export default function AdminLobbyPage() {
             .then(r => r.json())
             .then(setScenarios);
 
-        const socket = connectSocket();
+        const socket = connectAdminSocket(token!);
 
         socket.on('lobby_updated', (data: { players: any[] }) => {
             setPlayers(data.players);
@@ -100,9 +101,18 @@ export default function AdminLobbyPage() {
             <p className="text-zinc-400 text-sm">Lobby beheer</p>
           </div>
           {session && (
-            <div className="text-right">
-              <p className="text-zinc-400 text-xs uppercase tracking-widest">Sessiecode</p>
-              <p className="text-4xl font-mono font-bold tracking-widest">{session.joinCode}</p>
+            <div className="flex items-center gap-6">
+              <div className="text-right">
+                <p className="text-zinc-400 text-xs uppercase tracking-widest">Sessiecode</p>
+                <p className="text-4xl font-mono font-bold tracking-widest">{session.joinCode}</p>
+                <p className="text-zinc-500 text-xs mt-1">/player/join?code={session.joinCode}</p>
+              </div>
+              <div className="bg-white p-2 rounded-xl">
+                <QRCodeSVG
+                  value={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/player/join?code=${session.joinCode}`}
+                  size={96}
+                />
+              </div>
             </div>
           )}
         </div>

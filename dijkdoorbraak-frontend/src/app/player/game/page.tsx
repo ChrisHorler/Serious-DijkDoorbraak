@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSocket } from '@/lib/socket';
-import { useGameStore } from '@/lib/store';
+import { useGameStore, MapOverlay } from '@/lib/store';
 import dynamic from 'next/dynamic';
 import AbilityMenu from '@/components/player/AbilityMenu';
 import InjectToast from '@/components/player/InjectToast';
@@ -13,7 +13,7 @@ const GameMap = dynamic(() => import('@/components/player/GameMap'), { ssr: fals
 
 export default function GamePage() {
     const router = useRouter();
-    const { player, session, addInject, addToast, setActiveInject } = useGameStore();
+    const { player, session, addInject, addToast, setActiveInject, addOverlay, overlays } = useGameStore();
 
     useEffect(() => {
         if (!player || !session) {
@@ -33,16 +33,26 @@ export default function GamePage() {
             console.log('action_response:', data);
         });
 
+        socket.on('map_update', (data: { overlay: MapOverlay }) => {
+            addOverlay(data.overlay);
+        });
+
+        socket.on('scenario_stopped', () => {
+            router.push('/player/join');
+        });
+
         return () => {
-            socket.off('inject_recevied');
+            socket.off('inject_received');
             socket.off('action_response');
+            socket.off('map_update');
+            socket.off('scenario_stopped');
         };
     }, [player, session]);
 
     return (
         <main className="relative w-full h-screen overflow-hidden bg-zinc-950">
             {/* Map fills the screen */}
-            <GameMap />
+            <GameMap overlays={overlays} />
 
             {/* Role badge top left */}
             {player?.role && (

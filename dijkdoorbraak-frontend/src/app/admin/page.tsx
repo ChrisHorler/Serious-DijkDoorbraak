@@ -4,20 +4,39 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdminStore } from '@/lib/adminStore';
 
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
 export default function AdminLoginPage() {
     const router = useRouter();
-    const { setAuthenticated } = useAdminStore();
+    const { setToken } = useAdminStore();
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    function handleLogin() {
-        if (password === ADMIN_PASSWORD) {
-            setAuthenticated(true);
+    async function handleLogin() {
+        if (!password.trim()) return;
+        setLoading(true);
+        setError('');
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/auth/admin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password }),
+            });
+
+            if (!res.ok) {
+                setError('Incorrect wachtwoord');
+                return;
+            }
+
+            const { token } = await res.json();
+            setToken(token);
             router.push('/admin/lobby');
-        } else {
-            setError('incorrect wachtwoord');
+        } catch {
+            setError('Verbinding mislukt. Controleer de server.');
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -41,9 +60,10 @@ export default function AdminLoginPage() {
                 {error && <p className="text-red-400 text-sm text-center">{error}</p>}
                 <button
                     onClick={handleLogin}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl py-3 transition"
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl py-3 transition"
                 >
-                Inloggen
+                    {loading ? 'Inloggen...' : 'Inloggen'}
                 </button>
             </div>
         </div>
