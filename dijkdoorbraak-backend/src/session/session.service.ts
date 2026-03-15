@@ -78,4 +78,8 @@ export class SessionService {
       orderBy: { createdAt: "desc" },
     });
   }
+
+  async getScenarios() {
+    return this.prisma.db.scenario.findMany();
+  }
 }

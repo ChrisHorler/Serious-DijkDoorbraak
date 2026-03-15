@@ -63,8 +63,22 @@ interface GameStore {
     addToast: (inject: Inject) => void;
     removeToast: (id: string) => void;
 
+    // Map overlays pushed by admin
+    overlays: MapOverlay[];
+    addOverlay: (overlay: MapOverlay) => void;
+    removeOverlay: (id: string) => void;
+
     // Reset
     reset: () => void;
+}
+
+export interface MapOverlay {
+    id: string;
+    type: 'flood_zone' | 'breach_marker' | 'evacuation_zone' | 'road_blocked';
+    label: string;
+    color: string;
+    kind: 'polygon' | 'marker';
+    coordinates: [number, number][] | [number, number];
 }
 
 export const useGameStore = create<GameStore>() (
@@ -90,6 +104,16 @@ export const useGameStore = create<GameStore>() (
             removeToast: (id) =>
                 set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
 
+            overlays: [],
+            addOverlay: (overlay) =>
+                set((state) => ({
+                    overlays: state.overlays.some((o) => o.id === overlay.id)
+                        ? state.overlays.filter((o) => o.id !== overlay.id)
+                        : [...state.overlays, overlay],
+                })),
+            removeOverlay: (id) =>
+                set((state) => ({ overlays: state.overlays.filter((o) => o.id !== id) })),
+
             reset: () => set({
                 session: null,
                 player: null,
@@ -97,6 +121,7 @@ export const useGameStore = create<GameStore>() (
                 injects: [],
                 activeInject: null,
                 toasts: [],
+                overlays: [],
             }),
         }),
         {

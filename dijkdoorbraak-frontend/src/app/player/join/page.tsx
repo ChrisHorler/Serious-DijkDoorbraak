@@ -1,16 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { connectSocket } from '@/lib/socket';
 import { useGameStore } from '@/lib/store';
 
 export default function JoinPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { setPlayer, setSession } = useGameStore();
 
     const [joinCode, setJoinCode] = useState('');
     const [nickname, setNickname] = useState('');
+
+    useEffect(() => {
+        const code = searchParams.get('code');
+        if (code) setJoinCode(code.toUpperCase());
+    }, [searchParams]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 

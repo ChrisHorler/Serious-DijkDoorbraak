@@ -4,8 +4,10 @@ import { Server } from "socket.io";
 import { PlayerService } from "./player/player.service";
 import { SessionService } from "./session/session.service";
 import { DecisionService } from "./decision/decision.service";
+import { InjectService } from "./inject/inject.service";
 import { SessionStatus } from ".prisma/client";
 import { ScenarioEngineService } from "./scenario-engine/scenario-engine.service";
+import { verifyAdminToken } from "./auth/auth.controller";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,9 +30,16 @@ async function bootstrap() {
   const playerService = app.get(PlayerService);
   const sessionService = app.get(SessionService);
   const decisionService = app.get(DecisionService);
+  const injectService = app.get(InjectService);
+
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+    socket.data.isAdmin = token ? verifyAdminToken(token) : false;
+    next();
+  });
 
   io.on("connection", (socket) => {
-    console.log("Client connected:", socket.id);
+    console.log("Client connected:", socket.id, socket.data.isAdmin ? "(admin)" : "");
 
     socket.on("join_lobby", async (data, callback) => {
       console.log("join_lobby received:", data);
@@ -154,6 +163,40 @@ async function bootstrap() {
 
         const players = await playerService.getPlayerInSession(player.sessionId);
         io.to(player.sessionId).emit("lobby_updated", { players });
+      }
+    });
+
+    socket.on('admin_join', (data: { sessionId: string }) => {
+      if (!socket.data.isAdmin) return;
+      socket.join(data.sessionId);
+      console.log(`Admin joined room ${data.sessionId}`);
+    });
+
+    socket.on('map_update', (data: { sessionId: string; overlay: any }) => {
+      if (!socket.data.isAdmin) return;
+      io.to(data.sessionId).emit('map_update', { overlay: data.overlay });
+    });
+
+    socket.on('fire_inject', async (data: { sessionId: string; injectId: string }, callback) => {
+      if (!socket.data.isAdmin) return callback?.({ success: false, message: 'Unauthorized' });
+      try {
+        const inject = await injectService.getInject(data.injectId);
+        await scenarioEngine.fireInject(data.sessionId, inject);
+        if (callback) callback({ success: true });
+      } catch (error) {
+        if (callback) callback({ success: false, message: error.message });
+      }
+    });
+
+    socket.on('stop_scenario', async (data: { sessionId: string }, callback) => {
+      if (!socket.data.isAdmin) return callback?.({ success: false, message: 'Unauthorized' });
+      try {
+        scenarioEngine.stopScenario(data.sessionId);
+        const session = await sessionService.updateStatus(data.sessionId, SessionStatus.ENDED);
+        io.to(data.sessionId).emit('scenario_stopped', { session });
+        if (callback) callback({ success: true });
+      } catch (error) {
+        if (callback) callback({ success: false, message: error.message });
       }
     });
   });

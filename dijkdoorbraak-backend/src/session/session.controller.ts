@@ -16,6 +16,11 @@ export class SessionController {
     return this.sessionService.listSessions();
   }
 
+  @Get('scenarios/all')
+  getScenarios() {
+    return this.sessionService.getScenarios();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.sessionService.getSession(id);
