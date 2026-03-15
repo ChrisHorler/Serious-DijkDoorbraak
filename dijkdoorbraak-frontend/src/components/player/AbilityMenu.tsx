@@ -39,7 +39,7 @@ export default function AbilityMenu() {
 
             {/* Ability list */}
             {open && (
-                <div className="absolute bottom-20 right-4 z-20 w-72 bg-zinc-900/95 backdrop-blur border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden">
+                <div className="absolute right-4 z-20 w-72 bg-zinc-900/95 backdrop-blur border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden" style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
                     <div className="px-4 py-3 border-b border-zinc-800">
                         <p className="text-zinc-400 text-xs uppercase tracking-widest">Acties</p>
                         <p className="text-white font-bold text-sm">{player?.role?.name}</p>
@@ -61,9 +61,10 @@ export default function AbilityMenu() {
             {/* FAB button */}
             <button
                 onClick={() => setOpen(!open)}
-                className="absolute bottom-6 right-4 z-20 w-14 h-14 bg-blue-600 hover:bg-blue-500 rounded-full shadow-xl flex items-center justify-center transition"
+                className="absolute right-4 z-20 w-14 h-14 bg-blue-600 hover:bg-blue-500 rounded-full shadow-xl flex items-center justify-center transition"
+                style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
             >
-                <span className="text-white text-2xl">{open ? 'x' : '⚡'}</span>
+                <span className="text-white text-2xl">{open ? '✕' : '⚡'}</span>
             </button>
         </>
     );

@@ -59,7 +59,7 @@ export class PlayerService {
     data: {
       role: { connect: { id: roleId } },
     },
-    include: { role: true },
+    include: { role: { include: { abilities: true } } },
   });
 }
 

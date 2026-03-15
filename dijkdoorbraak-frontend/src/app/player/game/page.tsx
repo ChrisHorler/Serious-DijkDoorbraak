@@ -50,7 +50,7 @@ export default function GamePage() {
     }, [player, session]);
 
     return (
-        <main className="relative w-full h-screen overflow-hidden bg-zinc-950">
+        <main className="relative w-full h-dvh overflow-hidden bg-zinc-950">
             {/* Map fills the screen */}
             <GameMap overlays={overlays} />
 
