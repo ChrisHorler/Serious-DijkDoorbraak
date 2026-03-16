@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { useAdminStore, Decision, MapOverlay } from '@/lib/adminStore';
 import { connectAdminSocket, getSocket } from '@/lib/socket';
 import { Inject } from '@/lib/store';
+import { getPhaseOverlays } from '@/lib/overlayPresets';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
@@ -15,7 +16,8 @@ export default function AdminSessionPage() {
     const router = useRouter();
     const {
         authenticated, token, session, players, decisions, overlays, injects,
-        addDecision, updateDecision, setInjects, addOverlay,
+        addDecision, updateDecision, clearDecisions, setInjects, addOverlay,
+        phases, currentPhaseIndex, setCurrentPhaseIndex, setOverlays,
     } = useAdminStore();
 
     const [respondingTo, setRespondingTo] = useState<Decision | null>(null);
@@ -29,6 +31,8 @@ export default function AdminSessionPage() {
             router.replace('/admin');
             return;
         }
+
+        clearDecisions();
 
         const socket = connectAdminSocket(token!);
         socket.emit('admin_join', { sessionId: session.id });
@@ -74,6 +78,26 @@ export default function AdminSessionPage() {
         });
     }
 
+    function handleNextPhase() {
+        if (!session || currentPhaseIndex >= phases.length - 1) return;
+        const nextIndex = currentPhaseIndex + 1;
+        const phase = phases[nextIndex];
+        const socket = getSocket();
+        const phaseOverlays = getPhaseOverlays(phase);
+
+        // Replace all overlays for all players
+        socket.emit('set_overlays', { sessionId: session.id, overlays: phaseOverlays }, () => {});
+        // Also update admin's own overlay view
+        setOverlays(phaseOverlays);
+
+        // Fire inject if phase has one
+        if (phase.injectId) {
+            socket.emit('fire_inject', { sessionId: session.id, injectId: phase.injectId }, () => {});
+        }
+
+        setCurrentPhaseIndex(nextIndex);
+    }
+
     function submitResponse(approved: boolean) {
         if (!respondingTo || !session) return;
         const socket = getSocket();
@@ -115,6 +139,30 @@ export default function AdminSessionPage() {
                         &nbsp;·&nbsp;{players.length} deelnemers
                     </p>
                 </div>
+
+                {/* Phase controls */}
+                {phases.length > 0 && (
+                    <div className="flex items-center gap-3">
+                        <div className="text-right">
+                            <p className="text-zinc-500 text-xs uppercase tracking-widest">Fase</p>
+                            <p className="text-white text-sm font-semibold">
+                                {currentPhaseIndex < 0 ? '—' : `${currentPhaseIndex + 1}/${phases.length}: ${phases[currentPhaseIndex].name}`}
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleNextPhase}
+                            disabled={currentPhaseIndex >= phases.length - 1}
+                            className="bg-blue-700 hover:bg-blue-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition"
+                        >
+                            {currentPhaseIndex < 0
+                                ? `▶ ${phases[0].name}`
+                                : currentPhaseIndex < phases.length - 1
+                                    ? `▶ ${phases[currentPhaseIndex + 1].name}`
+                                    : 'Laatste fase'}
+                        </button>
+                    </div>
+                )}
+
                 <button
                     onClick={stopScenario}
                     disabled={stopping}
@@ -149,7 +197,7 @@ export default function AdminSessionPage() {
                                 {d.customAction ? (
                                     <p className="text-zinc-400 italic">"{d.customAction}"</p>
                                 ) : (
-                                    <p className="text-zinc-400">Vaardigheid ingezet</p>
+                                    <p className="text-zinc-400">{d.ability?.name ?? 'Vaardigheid ingezet'}</p>
                                 )}
                                 {d.adminApproved !== null && (
                                     <p className={`text-xs mt-1 font-medium ${d.adminApproved ? 'text-green-400' : 'text-red-400'}`}>

@@ -11,8 +11,11 @@ import { verifyAdminToken } from "./auth/auth.controller";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',')
+    : ['http://localhost:3002', 'http://localhost:3000'];
   app.enableCors({
-    origin: ['http://localhost:3002', 'http://localhost:3000'],
+    origin: allowedOrigins,
     credentials: true,
   })
 
@@ -29,6 +32,12 @@ async function bootstrap() {
 
   const playerService = app.get(PlayerService);
   const sessionService = app.get(SessionService);
+
+  // Clean up any sessions left RUNNING from a previous process
+  const cleaned = await sessionService.endAllRunningSessions();
+  if (cleaned.count > 0) {
+    console.log(`Cleaned up ${cleaned.count} stale RUNNING session(s) on startup`);
+  }
   const decisionService = app.get(DecisionService);
   const injectService = app.get(InjectService);
 
@@ -186,6 +195,12 @@ async function bootstrap() {
       } catch (error) {
         if (callback) callback({ success: false, message: error.message });
       }
+    });
+
+    socket.on('set_overlays', (data: { sessionId: string; overlays: any[] }, callback) => {
+      if (!socket.data.isAdmin) return callback?.({ success: false, message: 'Unauthorized' });
+      io.to(data.sessionId).emit('overlays_set', { overlays: data.overlays });
+      if (callback) callback({ success: true });
     });
 
     socket.on('stop_scenario', async (data: { sessionId: string }, callback) => {

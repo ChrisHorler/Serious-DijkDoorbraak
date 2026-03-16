@@ -19,19 +19,9 @@ export class ScenarioEngineService {
 
   async startScenario(sessionId: string, scenarioId: string) {
     const injects = await this.injectService.getInjectsForScenario(scenarioId);
-    const timers: NodeJS.Timeout[] = [];
-
-    for (const inject of injects) {
-      const timer = setTimeout(async () => {
-        await this.fireInject(sessionId, inject);
-      }, inject.triggerTime * 1000);
-
-      timers.push(timer);
-    }
-
-    this.activeTimers.set(sessionId, timers);
+    this.activeTimers.set(sessionId, []);
     console.log(
-      `Scenario started for session ${sessionId} - ${injects.length} injects scheduled`,
+      `Scenario started for session ${sessionId} - ${injects.length} injects available (manual mode)`,
     );
   }
 

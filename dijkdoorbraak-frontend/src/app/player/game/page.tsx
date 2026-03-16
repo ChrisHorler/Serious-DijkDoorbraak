@@ -13,7 +13,7 @@ const GameMap = dynamic(() => import('@/components/player/GameMap'), { ssr: fals
 
 export default function GamePage() {
     const router = useRouter();
-    const { player, session, addInject, addToast, setActiveInject, addOverlay, overlays } = useGameStore();
+    const { player, session, addInject, addToast, setActiveInject, addOverlay, setOverlays, overlays } = useGameStore();
 
     useEffect(() => {
         if (!player || !session) {
@@ -37,6 +37,10 @@ export default function GamePage() {
             addOverlay(data.overlay);
         });
 
+        socket.on('overlays_set', (data: { overlays: MapOverlay[] }) => {
+            setOverlays(data.overlays);
+        });
+
         socket.on('scenario_stopped', () => {
             router.push('/player/join');
         });
@@ -45,12 +49,13 @@ export default function GamePage() {
             socket.off('inject_received');
             socket.off('action_response');
             socket.off('map_update');
+            socket.off('overlays_set');
             socket.off('scenario_stopped');
         };
     }, [player, session]);
 
     return (
-        <main className="relative w-full h-screen overflow-hidden bg-zinc-950">
+        <main className="relative w-full h-dvh overflow-hidden bg-zinc-950">
             {/* Map fills the screen */}
             <GameMap overlays={overlays} />
 

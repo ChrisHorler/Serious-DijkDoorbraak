@@ -82,4 +82,11 @@ export class SessionService {
   async getScenarios() {
     return this.prisma.db.scenario.findMany();
   }
+
+  async endAllRunningSessions() {
+    return this.prisma.db.session.updateMany({
+      where: { status: SessionStatus.RUNNING },
+      data: { status: SessionStatus.ENDED, endedAt: new Date() },
+    });
+  }
 }

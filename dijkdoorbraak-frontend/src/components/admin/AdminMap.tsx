@@ -3,8 +3,9 @@
 import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapOverlay } from '@/lib/adminStore';
+import type { MapOverlay } from '@/lib/store';
 import { getSocket } from '@/lib/socket';
+import { INCIDENT_LOCATION, STATIC_OVERLAYS, makeFloodZone } from '@/lib/overlayPresets';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -13,52 +14,7 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const INCIDENT_LOCATION: [number, number] = [51.8836, 4.6317];
-
-const OVERLAY_PRESETS: MapOverlay[] = [
-    {
-        id: 'flood_zone',
-        type: 'flood_zone',
-        label: 'Overstromingsgebied',
-        color: '#3b82f6',
-        kind: 'polygon',
-        coordinates: [
-            [51.870, 4.615],
-            [51.870, 4.655],
-            [51.895, 4.655],
-            [51.895, 4.615],
-        ],
-    },
-    {
-        id: 'breach_marker',
-        type: 'breach_marker',
-        label: 'Dijkdoorbraak',
-        color: '#ef4444',
-        kind: 'marker',
-        coordinates: [51.8836, 4.6317],
-    },
-    {
-        id: 'evacuation_zone',
-        type: 'evacuation_zone',
-        label: 'Evacuatiezone',
-        color: '#f59e0b',
-        kind: 'polygon',
-        coordinates: [
-            [51.860, 4.600],
-            [51.860, 4.670],
-            [51.905, 4.670],
-            [51.905, 4.600],
-        ],
-    },
-    {
-        id: 'road_blocked',
-        type: 'road_blocked',
-        label: 'Weg afgesloten',
-        color: '#f97316',
-        kind: 'marker',
-        coordinates: [51.878, 4.642],
-    },
-];
+const OVERLAY_PRESETS: MapOverlay[] = [makeFloodZone(1), ...STATIC_OVERLAYS];
 
 interface AdminMapProps {
     sessionId: string;

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Player, Session, Role, Inject } from './store';
+import { Player, Session, Role, Inject, MapOverlay } from './store';
 
 export interface Decision {
     id: string;
@@ -8,6 +8,7 @@ export interface Decision {
     sessionId: string;
     injectId: string | null;
     abilityId: string | null;
+    ability?: { id: string; name: string; description: string | null } | null;
     customAction: string | null;
     adminResponse: string | null;
     adminApproved: boolean | null;
@@ -16,14 +17,16 @@ export interface Decision {
     player?: Player;
 }
 
-export interface MapOverlay {
+export interface EscalationPhase {
     id: string;
-    type: 'flood_zone' | 'breach_marker' | 'evacuation_zone' | 'road_blocked';
-    label: string;
-    color: string;
-    kind: 'polygon' | 'marker';
-    coordinates: [number, number][] | [number, number];
+    name: string;
+    floodZoneScale: number | null; // null = no flood zone; 0.5=klein, 1.0=middel, 1.8=groot
+    activeOverlayIds: string[];    // ids of STATIC_OVERLAYS to include
+    injectId: string | null;
 }
+
+// Re-export MapOverlay from store for consumers that import it from here
+export type { MapOverlay };
 
 interface AdminStore {
     authenticated: boolean;
@@ -31,7 +34,7 @@ interface AdminStore {
     setToken: (token: string) => void;
 
     session: Session | null;
-    setSession: (session: Session) => void;
+    setSession: (session: Session | null) => void;
 
     players: Player[];
     setPlayers: (players: Player[]) => void;
@@ -43,6 +46,7 @@ interface AdminStore {
     decisions: Decision[];
     addDecision: (decision: Decision) => void;
     updateDecision: (decision: Decision) => void;
+    clearDecisions: () => void;
 
     injects: Inject[];
     setInjects: (injects: Inject[]) => void;
@@ -50,6 +54,12 @@ interface AdminStore {
     overlays: MapOverlay[];
     addOverlay: (overlay: MapOverlay) => void;
     removeOverlay: (id: string) => void;
+    setOverlays: (overlays: MapOverlay[]) => void;
+
+    phases: EscalationPhase[];
+    setPhases: (phases: EscalationPhase[]) => void;
+    currentPhaseIndex: number; // -1 = no phase started
+    setCurrentPhaseIndex: (index: number) => void;
 
     reset: () => void;
 }
@@ -76,11 +86,16 @@ export const useAdminStore = create<AdminStore>()(
 
             decisions: [],
             addDecision: (decision) =>
-                set((state) => ({ decisions: [decision, ...state.decisions] })),
+                set((state) => ({
+                    decisions: state.decisions.some((d) => d.id === decision.id)
+                        ? state.decisions
+                        : [decision, ...state.decisions],
+                })),
             updateDecision: (decision) =>
                 set((state) => ({
                     decisions: state.decisions.map((d) => (d.id === decision.id ? decision : d)),
                 })),
+            clearDecisions: () => set({ decisions: [] }),
 
             injects: [],
             setInjects: (injects) => set({ injects }),
@@ -94,6 +109,12 @@ export const useAdminStore = create<AdminStore>()(
                 })),
             removeOverlay: (id) =>
                 set((state) => ({ overlays: state.overlays.filter((o) => o.id !== id) })),
+            setOverlays: (overlays) => set({ overlays }),
+
+            phases: [],
+            setPhases: (phases) => set({ phases }),
+            currentPhaseIndex: -1,
+            setCurrentPhaseIndex: (index) => set({ currentPhaseIndex: index }),
 
             reset: () => set({
                 authenticated: false,
@@ -103,6 +124,8 @@ export const useAdminStore = create<AdminStore>()(
                 decisions: [],
                 injects: [],
                 overlays: [],
+                phases: [],
+                currentPhaseIndex: -1,
             }),
         }),
         {

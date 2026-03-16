@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { connectSocket } from '@/lib/socket';
 import { useGameStore } from '@/lib/store';
 
-export default function JoinPage() {
+function JoinForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { setPlayer, setSession } = useGameStore();
+    const { setPlayer, setSession, setLobbyPlayers } = useGameStore();
 
     const [joinCode, setJoinCode] = useState('');
     const [nickname, setNickname] = useState('');
@@ -39,6 +39,7 @@ export default function JoinPage() {
                 return; 
             }
 
+            setLobbyPlayers([]);
             setPlayer(res.player);
             setSession(res.player.session);
             router.push('/player/lobby');
@@ -106,5 +107,13 @@ export default function JoinPage() {
 
             </div>
         </main>
+    );
+}
+
+export default function JoinPage() {
+    return (
+        <Suspense>
+            <JoinForm />
+        </Suspense>
     );
 }
