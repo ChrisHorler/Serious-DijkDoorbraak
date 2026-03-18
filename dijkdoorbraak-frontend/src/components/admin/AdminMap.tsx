@@ -65,8 +65,16 @@ export default function AdminMap({ sessionId, overlays, onToggleOverlay, center,
                             );
                         }
                         if (overlay.kind === 'marker') {
+                            const icon = overlay.icon
+                                ? L.divIcon({
+                                    html: `<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))">${overlay.icon}</div>`,
+                                    className: '',
+                                    iconSize: [28, 28],
+                                    iconAnchor: [14, 14],
+                                })
+                                : undefined;
                             return (
-                                <Marker key={overlay.id} position={overlay.coordinates as [number, number]}>
+                                <Marker key={overlay.id} position={overlay.coordinates as [number, number]} {...(icon ? { icon } : {})}>
                                     <Popup>{overlay.label}</Popup>
                                 </Marker>
                             );

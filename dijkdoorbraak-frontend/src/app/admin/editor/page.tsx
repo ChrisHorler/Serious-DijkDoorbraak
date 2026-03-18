@@ -62,6 +62,12 @@ const DRAW_COLORS = [
     '#3b82f6', '#a855f7', '#ec4899', '#ffffff',
 ];
 
+const MARKER_ICONS = [
+    '🚒', '🚑', '🚓', '🚁', '⛵', '🚧',
+    '🏥', '🏚️', '⚠️', '🔥', '💧', '🌊',
+    '⛽', '🔴', '🟡', '🟢', '📍', '📌',
+];
+
 function generateId(): string {
     const arr = new Uint8Array(16);
     crypto.getRandomValues(arr);
@@ -118,6 +124,7 @@ export default function EditorPage() {
     const [pendingDraft, setPendingDraft] = useState<DrawDraft | null>(null);
     const [draftLabel, setDraftLabel] = useState('');
     const [draftColor, setDraftColor] = useState('#3b82f6');
+    const [draftIcon, setDraftIcon] = useState<string | null>(null);
 
     // ── Roles ──────────────────────────────────────────────────────
     const [roles, setRoles] = useState<Role[]>([]);
@@ -340,10 +347,13 @@ export default function EditorPage() {
             color: draftColor,
             kind: pendingDraft.kind,
             coordinates: pendingDraft.coordinates,
+            ...(pendingDraft.kind === 'marker' && draftIcon ? { icon: draftIcon } : {}),
         };
         const next = [...customOverlays, overlay];
         setCustomOverlays(next);
         setPendingDraft(null);
+        setDraftLabel('');
+        setDraftIcon(null);
         await persistCustomOverlays(next);
     }
 
@@ -478,7 +488,7 @@ export default function EditorPage() {
                     <div className="flex flex-1 min-h-0">
 
                         {/* ── Left content panel ── */}
-                        <div className="flex-1 overflow-y-auto p-5 space-y-5 border-r border-zinc-800">
+                        <div className="w-[380px] shrink-0 overflow-y-auto p-5 space-y-5 border-r border-zinc-800">
 
                             {/* Create / edit scenario form */}
                             {editingScenario !== null && (
@@ -660,7 +670,7 @@ export default function EditorPage() {
 
                         {/* ── Map panel ── */}
                         {showMapPanel ? (
-                            <div className="w-[520px] shrink-0 flex flex-col border-l border-zinc-800">
+                            <div className="flex-1 min-w-0 flex flex-col">
 
                                 {/* Map toolbar */}
                                 <div className="shrink-0 px-4 py-2 border-b border-zinc-800 flex items-center gap-3 flex-wrap">
@@ -733,9 +743,9 @@ export default function EditorPage() {
 
                                 {/* Draft form */}
                                 {pendingDraft && (
-                                    <div className="shrink-0 border-t border-zinc-800 p-4 bg-zinc-900">
-                                        <p className="text-xs font-semibold text-zinc-300 mb-3">
-                                            Nieuwe {pendingDraft.kind === 'polygon' ? 'zone' : 'markering'} — geef een naam en kleur
+                                    <div className="shrink-0 border-t border-zinc-800 p-4 bg-zinc-900 space-y-3">
+                                        <p className="text-xs font-semibold text-zinc-300">
+                                            Nieuwe {pendingDraft.kind === 'polygon' ? 'zone' : 'markering'} — geef een naam{pendingDraft.kind === 'marker' ? ', icoon' : ''} en kleur
                                         </p>
                                         <div className="flex items-center gap-3">
                                             <input
@@ -757,8 +767,21 @@ export default function EditorPage() {
                                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-lg text-sm transition shrink-0">
                                                 {savingOverlays ? 'Opslaan...' : 'Toevoegen'}
                                             </button>
-                                            <button onClick={() => setPendingDraft(null)} className="text-zinc-500 hover:text-white text-sm transition">✕</button>
+                                            <button onClick={() => { setPendingDraft(null); setDraftIcon(null); }} className="text-zinc-500 hover:text-white text-sm transition">✕</button>
                                         </div>
+                                        {pendingDraft.kind === 'marker' && (
+                                            <div>
+                                                <p className="text-xs text-zinc-500 mb-1.5">Icoon (optioneel)</p>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {MARKER_ICONS.map(emoji => (
+                                                        <button key={emoji} onClick={() => setDraftIcon(draftIcon === emoji ? null : emoji)}
+                                                            className={`w-8 h-8 rounded-lg text-lg flex items-center justify-center transition border ${draftIcon === emoji ? 'border-white bg-zinc-700' : 'border-zinc-700 hover:border-zinc-500 bg-zinc-800'}`}>
+                                                            {emoji}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -771,7 +794,7 @@ export default function EditorPage() {
                                                 <div key={overlay.id} className="flex items-center gap-2 text-xs bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5">
                                                     <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: overlay.color }} />
                                                     <span className="flex-1 truncate text-zinc-300">{overlay.label}</span>
-                                                    <span className="text-zinc-600 shrink-0">{overlay.kind === 'polygon' ? '⬡' : '📍'}</span>
+                                                    <span className="text-zinc-600 shrink-0">{overlay.kind === 'polygon' ? '⬡' : (overlay.icon ?? '📍')}</span>
                                                     <button onClick={() => deleteCustomOverlay(overlay.id)} className="text-zinc-600 hover:text-red-400 transition shrink-0">✕</button>
                                                 </div>
                                             ))}

@@ -51,6 +51,15 @@ interface EditorMapProps {
     onMarkerPlaced: (pt: [number, number]) => void;
 }
 
+function emojiIcon(emoji: string) {
+    return L.divIcon({
+        html: `<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))">${emoji}</div>`,
+        className: '',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+    });
+}
+
 function renderOverlay(overlay: MapOverlay, fillOpacity: number, strokeOpacity: number) {
     if (overlay.kind === 'polygon') {
         return (
@@ -65,7 +74,11 @@ function renderOverlay(overlay: MapOverlay, fillOpacity: number, strokeOpacity: 
     }
     if (overlay.kind === 'marker') {
         return (
-            <Marker key={overlay.id} position={overlay.coordinates as [number, number]}>
+            <Marker
+                key={overlay.id}
+                position={overlay.coordinates as [number, number]}
+                {...(overlay.icon ? { icon: emojiIcon(overlay.icon) } : {})}
+            >
                 <Popup>{overlay.label}</Popup>
             </Marker>
         );

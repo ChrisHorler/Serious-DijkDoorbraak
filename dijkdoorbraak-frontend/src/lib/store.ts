@@ -80,6 +80,7 @@ export interface MapOverlay {
     color: string;
     kind: 'polygon' | 'marker';
     coordinates: [number, number][] | [number, number];
+    icon?: string; // emoji or single character for marker icon
 }
 
 export const useGameStore = create<GameStore>() (
