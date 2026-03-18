@@ -14,15 +14,16 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const OVERLAY_PRESETS: MapOverlay[] = [makeFloodZone(1), ...STATIC_OVERLAYS];
-
 interface AdminMapProps {
     sessionId: string;
     overlays: MapOverlay[];
     onToggleOverlay: (overlay: MapOverlay) => void;
+    center?: [number, number];
 }
 
-export default function AdminMap({ sessionId, overlays, onToggleOverlay }: AdminMapProps) {
+export default function AdminMap({ sessionId, overlays, onToggleOverlay, center }: AdminMapProps) {
+    const mapCenter = center ?? INCIDENT_LOCATION;
+    const OVERLAY_PRESETS: MapOverlay[] = [makeFloodZone(1, mapCenter), ...STATIC_OVERLAYS];
     const activeIds = new Set(overlays.map((o) => o.id));
 
     function handleToggle(preset: MapOverlay) {
@@ -36,7 +37,7 @@ export default function AdminMap({ sessionId, overlays, onToggleOverlay }: Admin
             {/* Map */}
             <div className="flex-1 rounded-xl overflow-hidden min-h-0">
                 <MapContainer
-                    center={INCIDENT_LOCATION}
+                    center={mapCenter}
                     zoom={13}
                     className="w-full h-full z-0"
                     zoomControl={true}
@@ -46,7 +47,7 @@ export default function AdminMap({ sessionId, overlays, onToggleOverlay }: Admin
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    <Marker position={INCIDENT_LOCATION}>
+                    <Marker position={mapCenter}>
                         <Popup><strong>Incident locatie</strong><br />Dijkdoorbraak gedetecteerd</Popup>
                     </Marker>
 

@@ -18,6 +18,7 @@ export default function AdminSessionPage() {
         authenticated, token, session, players, decisions, overlays, injects,
         addDecision, updateDecision, clearDecisions, setInjects, addOverlay,
         phases, currentPhaseIndex, setCurrentPhaseIndex, setOverlays,
+        incidentLocation,
     } = useAdminStore();
 
     const [respondingTo, setRespondingTo] = useState<Decision | null>(null);
@@ -83,7 +84,7 @@ export default function AdminSessionPage() {
         const nextIndex = currentPhaseIndex + 1;
         const phase = phases[nextIndex];
         const socket = getSocket();
-        const phaseOverlays = getPhaseOverlays(phase);
+        const phaseOverlays = getPhaseOverlays(phase, incidentLocation ?? undefined);
 
         // Replace all overlays for all players
         socket.emit('set_overlays', { sessionId: session.id, overlays: phaseOverlays }, () => {});
@@ -218,6 +219,7 @@ export default function AdminSessionPage() {
                                 sessionId={session.id}
                                 overlays={overlays}
                                 onToggleOverlay={addOverlay}
+                                center={incidentLocation ?? undefined}
                             />
                         )}
                     </div>

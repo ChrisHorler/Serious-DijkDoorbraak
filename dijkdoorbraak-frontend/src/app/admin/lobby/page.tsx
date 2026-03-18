@@ -6,15 +6,9 @@ import { useAdminStore, EscalationPhase } from '@/lib/adminStore';
 import { connectAdminSocket, getSocket } from '@/lib/socket';
 import { Role } from '@/lib/store';
 import { QRCodeSVG } from 'qrcode.react';
-import { STATIC_OVERLAYS } from '@/lib/overlayPresets';
+import { STATIC_OVERLAYS, FLOOD_SIZES } from '@/lib/overlayPresets';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-
-const FLOOD_SIZES = [
-    { label: 'Klein', value: 0.5 },
-    { label: 'Middel', value: 1.0 },
-    { label: 'Groot', value: 1.8 },
-];
 
 function newPhase(index: number): EscalationPhase {
     return {
@@ -34,6 +28,7 @@ export default function AdminLobbyPage() {
         roles, setRoles,
         injects, setInjects,
         phases, setPhases, setCurrentPhaseIndex,
+        setIncidentLocation,
     } = useAdminStore();
 
     function abandonSession() {
@@ -104,6 +99,17 @@ export default function AdminLobbyPage() {
             body: JSON.stringify({ scenarioId: selectedScenario }),
         });
         const newSession = await res.json();
+
+        // Load scenario phases and incident location into store
+        const scenarioRes = await fetch(`${BACKEND_URL}/sessions/scenarios/${selectedScenario}`);
+        const scenario = await scenarioRes.json();
+        setPhases(Array.isArray(scenario.phases) ? scenario.phases : []);
+        if (scenario.incidentLat != null && scenario.incidentLng != null) {
+            setIncidentLocation([scenario.incidentLat, scenario.incidentLng]);
+        } else {
+            setIncidentLocation(null);
+        }
+
         setSession(newSession);
         setCurrentPhaseIndex(-1);
         setCreating(false);

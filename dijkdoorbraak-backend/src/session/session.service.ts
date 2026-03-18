@@ -96,7 +96,7 @@ export class SessionService {
     return this.prisma.db.scenario.create({ data });
   }
 
-  async updateScenario(id: string, data: { title?: string; description?: string }) {
+  async updateScenario(id: string, data: { title?: string; description?: string; phases?: any; incidentLat?: number; incidentLng?: number }) {
     return this.prisma.db.scenario.update({ where: { id }, data });
   }
 

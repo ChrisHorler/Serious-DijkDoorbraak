@@ -61,6 +61,9 @@ interface AdminStore {
     currentPhaseIndex: number; // -1 = no phase started
     setCurrentPhaseIndex: (index: number) => void;
 
+    incidentLocation: [number, number] | null;
+    setIncidentLocation: (loc: [number, number] | null) => void;
+
     reset: () => void;
 }
 
@@ -116,6 +119,9 @@ export const useAdminStore = create<AdminStore>()(
             currentPhaseIndex: -1,
             setCurrentPhaseIndex: (index) => set({ currentPhaseIndex: index }),
 
+            incidentLocation: null,
+            setIncidentLocation: (loc) => set({ incidentLocation: loc }),
+
             reset: () => set({
                 authenticated: false,
                 token: null,
@@ -126,6 +132,7 @@ export const useAdminStore = create<AdminStore>()(
                 overlays: [],
                 phases: [],
                 currentPhaseIndex: -1,
+                incidentLocation: null,
             }),
         }),
         {

@@ -3,8 +3,14 @@ import type { MapOverlay } from './store';
 
 export const INCIDENT_LOCATION: [number, number] = [51.8836, 4.6317];
 
-export function makeFloodZone(scale: number = 1): MapOverlay {
-    const [clat, clng] = INCIDENT_LOCATION;
+export const FLOOD_SIZES: { label: string; value: number }[] = [
+    { label: 'Klein', value: 0.5 },
+    { label: 'Middel', value: 1.0 },
+    { label: 'Groot', value: 1.8 },
+];
+
+export function makeFloodZone(scale: number = 1, center?: [number, number]): MapOverlay {
+    const [clat, clng] = center ?? INCIDENT_LOCATION;
     const latR = 0.012 * scale;
     const lngR = 0.020 * scale;
     return {
@@ -54,10 +60,10 @@ export const STATIC_OVERLAYS: MapOverlay[] = [
     },
 ];
 
-export function getPhaseOverlays(phase: EscalationPhase): MapOverlay[] {
+export function getPhaseOverlays(phase: EscalationPhase, center?: [number, number]): MapOverlay[] {
     const overlays: MapOverlay[] = [];
     if (phase.floodZoneScale !== null) {
-        overlays.push(makeFloodZone(phase.floodZoneScale));
+        overlays.push(makeFloodZone(phase.floodZoneScale, center));
     }
     for (const id of phase.activeOverlayIds) {
         const overlay = STATIC_OVERLAYS.find(o => o.id === id);
