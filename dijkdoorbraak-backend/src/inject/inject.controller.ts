@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body } from "@nestjs/common";
+import { Controller, Get, Post, Patch, Delete, Param, Body } from "@nestjs/common";
 import { InjectService } from "./inject.service";
 
 @Controller("injects")
@@ -24,6 +24,14 @@ export class InjectController {
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.injectService.getInject(id);
+  }
+
+  @Patch(":id")
+  update(
+    @Param("id") id: string,
+    @Body() body: { title?: string; content?: string; triggerTime?: number; targetRole?: string | null },
+  ) {
+    return this.injectService.updateInject(id, body);
   }
 
   @Delete(":id")

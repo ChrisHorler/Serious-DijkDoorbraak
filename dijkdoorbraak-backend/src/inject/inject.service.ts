@@ -36,6 +36,15 @@ export class InjectService {
     return inject;
   }
 
+  async updateInject(id: string, data: {
+    title?: string;
+    content?: string;
+    triggerTime?: number;
+    targetRole?: string | null;
+  }) {
+    return this.prisma.db.inject.update({ where: { id }, data });
+  }
+
   async deleteInject(id: string) {
     return this.prisma.db.inject.delete({ where: { id } });
   }

@@ -50,6 +50,7 @@ export class DecisionService {
                 adminApproved: data.adminApproved,
                 score: data.score,
             },
+            include: { ability: true },
         });
     }
 

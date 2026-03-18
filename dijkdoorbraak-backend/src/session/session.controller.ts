@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
 import { SessionService } from './session.service';
 import { SessionStatus } from '@prisma/client';
 
@@ -19,6 +19,29 @@ export class SessionController {
   @Get('scenarios/all')
   getScenarios() {
     return this.sessionService.getScenarios();
+  }
+
+  @Get('scenarios/:id')
+  getScenario(@Param('id') id: string) {
+    return this.sessionService.getScenario(id);
+  }
+
+  @Post('scenarios')
+  createScenario(@Body() body: { title: string; description?: string }) {
+    return this.sessionService.createScenario(body);
+  }
+
+  @Patch('scenarios/:id')
+  updateScenario(
+    @Param('id') id: string,
+    @Body() body: { title?: string; description?: string },
+  ) {
+    return this.sessionService.updateScenario(id, body);
+  }
+
+  @Delete('scenarios/:id')
+  deleteScenario(@Param('id') id: string) {
+    return this.sessionService.deleteScenario(id);
   }
 
   @Get(':id')

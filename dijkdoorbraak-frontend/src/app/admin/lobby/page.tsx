@@ -161,6 +161,12 @@ export default function AdminLobbyPage() {
                         <h1 className="text-2xl font-bold">Spelleider Dashboard</h1>
                         <p className="text-zinc-400 text-sm">Lobby beheer</p>
                     </div>
+                    <button
+                        onClick={() => router.push('/admin/editor')}
+                        className="ml-4 text-zinc-400 hover:text-white text-sm border border-zinc-700 hover:border-zinc-500 rounded-lg px-3 py-1.5 transition"
+                    >
+                        ✏ Editor
+                    </button>
                     {session && (
                         <div className="flex items-center gap-6">
                             <button

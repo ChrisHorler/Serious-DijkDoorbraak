@@ -80,7 +80,28 @@ export class SessionService {
   }
 
   async getScenarios() {
-    return this.prisma.db.scenario.findMany();
+    return this.prisma.db.scenario.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  async getScenario(id: string) {
+    const scenario = await this.prisma.db.scenario.findUnique({
+      where: { id },
+      include: { Injects: { orderBy: { triggerTime: 'asc' } } },
+    });
+    if (!scenario) throw new NotFoundException(`Scenario ${id} not found`);
+    return scenario;
+  }
+
+  async createScenario(data: { title: string; description?: string }) {
+    return this.prisma.db.scenario.create({ data });
+  }
+
+  async updateScenario(id: string, data: { title?: string; description?: string }) {
+    return this.prisma.db.scenario.update({ where: { id }, data });
+  }
+
+  async deleteScenario(id: string) {
+    return this.prisma.db.scenario.delete({ where: { id } });
   }
 
   async endAllRunningSessions() {

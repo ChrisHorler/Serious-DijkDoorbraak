@@ -167,9 +167,7 @@ async function bootstrap() {
       // Only remove player if session is still in lobby
       const session = await sessionService.getSession(player.sessionId);
       if (session?.status === SessionStatus.LOBBY) {
-        // Mark as offline instead of deleting
-        await playerService.clearSocketId(socket.id);
-
+        await playerService.removePlayerBySocketId(socket.id);
         const players = await playerService.getPlayerInSession(player.sessionId);
         io.to(player.sessionId).emit("lobby_updated", { players });
       }
