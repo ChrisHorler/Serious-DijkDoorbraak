@@ -19,11 +19,12 @@ interface AdminMapProps {
     overlays: MapOverlay[];
     onToggleOverlay: (overlay: MapOverlay) => void;
     center?: [number, number];
+    customOverlays?: MapOverlay[];
 }
 
-export default function AdminMap({ sessionId, overlays, onToggleOverlay, center }: AdminMapProps) {
+export default function AdminMap({ sessionId, overlays, onToggleOverlay, center, customOverlays = [] }: AdminMapProps) {
     const mapCenter = center ?? INCIDENT_LOCATION;
-    const OVERLAY_PRESETS: MapOverlay[] = [makeFloodZone(1, mapCenter), ...STATIC_OVERLAYS];
+    const OVERLAY_PRESETS: MapOverlay[] = [makeFloodZone(1, mapCenter), ...STATIC_OVERLAYS, ...customOverlays];
     const activeIds = new Set(overlays.map((o) => o.id));
 
     function handleToggle(preset: MapOverlay) {

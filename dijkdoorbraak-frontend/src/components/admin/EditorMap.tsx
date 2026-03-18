@@ -1,9 +1,10 @@
 'use client';
 
-import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, Polyline, CircleMarker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { EscalationPhase } from '@/lib/adminStore';
+import type { MapOverlay } from '@/lib/store';
 import { makeFloodZone, STATIC_OVERLAYS } from '@/lib/overlayPresets';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -13,10 +14,26 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-function MapClickHandler({ onLocationChange }: { onLocationChange: (lat: number, lng: number) => void }) {
+export type DrawMode = 'none' | 'polygon' | 'marker';
+
+interface ClickHandlerProps {
+    drawMode: DrawMode;
+    onLocationChange: (lat: number, lng: number) => void;
+    onAddDrawPoint: (pt: [number, number]) => void;
+    onMarkerPlaced: (pt: [number, number]) => void;
+}
+
+function ClickHandler({ drawMode, onLocationChange, onAddDrawPoint, onMarkerPlaced }: ClickHandlerProps) {
     useMapEvents({
         click(e) {
-            onLocationChange(e.latlng.lat, e.latlng.lng);
+            const pt: [number, number] = [e.latlng.lat, e.latlng.lng];
+            if (drawMode === 'none') {
+                onLocationChange(pt[0], pt[1]);
+            } else if (drawMode === 'polygon') {
+                onAddDrawPoint(pt);
+            } else if (drawMode === 'marker') {
+                onMarkerPlaced(pt);
+            }
         },
     });
     return null;
@@ -27,21 +44,52 @@ interface EditorMapProps {
     lng: number;
     onLocationChange: (lat: number, lng: number) => void;
     previewPhase?: EscalationPhase | null;
+    customOverlays: MapOverlay[];
+    drawMode: DrawMode;
+    drawPoints: [number, number][];
+    onAddDrawPoint: (pt: [number, number]) => void;
+    onMarkerPlaced: (pt: [number, number]) => void;
 }
 
-export default function EditorMap({ lat, lng, onLocationChange, previewPhase }: EditorMapProps) {
+function renderOverlay(overlay: MapOverlay, fillOpacity: number, strokeOpacity: number) {
+    if (overlay.kind === 'polygon') {
+        return (
+            <Polygon
+                key={overlay.id}
+                positions={overlay.coordinates as [number, number][]}
+                pathOptions={{ color: overlay.color, fillOpacity, opacity: strokeOpacity, weight: 2 }}
+            >
+                <Popup>{overlay.label}</Popup>
+            </Polygon>
+        );
+    }
+    if (overlay.kind === 'marker') {
+        return (
+            <Marker key={overlay.id} position={overlay.coordinates as [number, number]}>
+                <Popup>{overlay.label}</Popup>
+            </Marker>
+        );
+    }
+    return null;
+}
+
+export default function EditorMap({
+    lat, lng, onLocationChange,
+    previewPhase, customOverlays,
+    drawMode, drawPoints,
+    onAddDrawPoint, onMarkerPlaced,
+}: EditorMapProps) {
     const center: [number, number] = [lat, lng];
 
     const floodZone = previewPhase?.floodZoneScale != null
         ? makeFloodZone(previewPhase.floodZoneScale, center)
         : null;
 
-    const staticOverlays = previewPhase
-        ? STATIC_OVERLAYS.filter(o => previewPhase.activeOverlayIds.includes(o.id))
-        : [];
+    // All available static + custom overlays
+    const allOverlays: MapOverlay[] = [...STATIC_OVERLAYS, ...customOverlays];
 
     return (
-        <div className="w-full h-full rounded-xl overflow-hidden">
+        <div className={`w-full h-full rounded-xl overflow-hidden ${drawMode !== 'none' ? '[&_.leaflet-container]:!cursor-crosshair' : ''}`}>
             <MapContainer
                 center={center}
                 zoom={13}
@@ -53,54 +101,68 @@ export default function EditorMap({ lat, lng, onLocationChange, previewPhase }: 
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <MapClickHandler onLocationChange={onLocationChange} />
+                <ClickHandler
+                    drawMode={drawMode}
+                    onLocationChange={onLocationChange}
+                    onAddDrawPoint={onAddDrawPoint}
+                    onMarkerPlaced={onMarkerPlaced}
+                />
 
-                {/* Incident marker — draggable */}
-                <Marker
-                    position={center}
-                    draggable={true}
-                    eventHandlers={{
-                        dragend: (e) => {
-                            const pos = (e.target as L.Marker).getLatLng();
-                            onLocationChange(pos.lat, pos.lng);
-                        },
-                    }}
-                >
-                    <Popup><strong>Dijkdoorbraak</strong><br />Sleep of klik op de kaart om te verplaatsen</Popup>
-                </Marker>
+                {/* Incident marker — draggable, hidden while drawing */}
+                {drawMode === 'none' && (
+                    <Marker
+                        position={center}
+                        draggable={true}
+                        eventHandlers={{
+                            dragend: (e) => {
+                                const pos = (e.target as L.Marker).getLatLng();
+                                onLocationChange(pos.lat, pos.lng);
+                            },
+                        }}
+                    >
+                        <Popup><strong>Dijkdoorbraak</strong><br />Sleep of klik op de kaart om te verplaatsen</Popup>
+                    </Marker>
+                )}
 
                 {/* Phase preview: flood zone */}
                 {floodZone && (
                     <Polygon
                         positions={floodZone.coordinates as [number, number][]}
-                        pathOptions={{ color: floodZone.color, fillOpacity: 0.3 }}
+                        pathOptions={{ color: floodZone.color, fillOpacity: 0.35, weight: 2 }}
                     >
                         <Popup>{floodZone.label}</Popup>
                     </Polygon>
                 )}
 
-                {/* Phase preview: static overlays */}
-                {staticOverlays.map(overlay => {
-                    if (overlay.kind === 'polygon') {
-                        return (
-                            <Polygon
-                                key={overlay.id}
-                                positions={overlay.coordinates as [number, number][]}
-                                pathOptions={{ color: overlay.color, fillOpacity: 0.3 }}
-                            >
-                                <Popup>{overlay.label}</Popup>
-                            </Polygon>
-                        );
-                    }
-                    if (overlay.kind === 'marker') {
-                        return (
-                            <Marker key={overlay.id} position={overlay.coordinates as [number, number]}>
-                                <Popup>{overlay.label}</Popup>
-                            </Marker>
-                        );
-                    }
-                    return null;
+                {/* All overlays — dim inactive when phase is being previewed */}
+                {allOverlays.map(overlay => {
+                    const inPhase = previewPhase?.activeOverlayIds.includes(overlay.id) ?? false;
+                    const fill = previewPhase ? (inPhase ? 0.5 : 0.1) : 0.35;
+                    const stroke = previewPhase ? (inPhase ? 1 : 0.3) : 0.8;
+                    return renderOverlay(overlay, fill, stroke);
                 })}
+
+                {/* Drawing state: points + polyline preview */}
+                {drawPoints.map((pt, i) => (
+                    <CircleMarker
+                        key={i}
+                        center={pt}
+                        radius={5}
+                        pathOptions={{ color: '#fff', fillColor: '#3b82f6', fillOpacity: 1, weight: 2 }}
+                    />
+                ))}
+                {drawPoints.length >= 2 && (
+                    <Polyline
+                        positions={drawMode === 'polygon' ? [...drawPoints, drawPoints[0]] : drawPoints}
+                        pathOptions={{ color: '#3b82f6', dashArray: '6 4', weight: 2 }}
+                    />
+                )}
+                {drawMode === 'polygon' && drawPoints.length >= 3 && (
+                    <Polygon
+                        positions={drawPoints}
+                        pathOptions={{ color: '#3b82f6', fillOpacity: 0.1, dashArray: '6 4', weight: 2 }}
+                    />
+                )}
             </MapContainer>
         </div>
     );

@@ -10,9 +10,10 @@ model Scenario {
   id          String    @id @default(uuid())
   title       String
   description String?
-  phases      Json?
-  incidentLat Float?
-  incidentLng Float?
+  phases         Json?
+  customOverlays Json?
+  incidentLat    Float?
+  incidentLng    Float?
   Injects     Inject[]
   sessions    Session[]
   createdAt   DateTime  @default(now())

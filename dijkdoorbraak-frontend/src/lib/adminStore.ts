@@ -64,6 +64,9 @@ interface AdminStore {
     incidentLocation: [number, number] | null;
     setIncidentLocation: (loc: [number, number] | null) => void;
 
+    scenarioCustomOverlays: MapOverlay[];
+    setScenarioCustomOverlays: (overlays: MapOverlay[]) => void;
+
     reset: () => void;
 }
 
@@ -122,6 +125,9 @@ export const useAdminStore = create<AdminStore>()(
             incidentLocation: null,
             setIncidentLocation: (loc) => set({ incidentLocation: loc }),
 
+            scenarioCustomOverlays: [],
+            setScenarioCustomOverlays: (overlays) => set({ scenarioCustomOverlays: overlays }),
+
             reset: () => set({
                 authenticated: false,
                 token: null,
@@ -133,6 +139,7 @@ export const useAdminStore = create<AdminStore>()(
                 phases: [],
                 currentPhaseIndex: -1,
                 incidentLocation: null,
+                scenarioCustomOverlays: [],
             }),
         }),
         {

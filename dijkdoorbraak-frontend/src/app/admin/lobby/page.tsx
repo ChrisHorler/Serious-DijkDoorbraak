@@ -28,7 +28,7 @@ export default function AdminLobbyPage() {
         roles, setRoles,
         injects, setInjects,
         phases, setPhases, setCurrentPhaseIndex,
-        setIncidentLocation,
+        setIncidentLocation, setScenarioCustomOverlays,
     } = useAdminStore();
 
     function abandonSession() {
@@ -104,6 +104,7 @@ export default function AdminLobbyPage() {
         const scenarioRes = await fetch(`${BACKEND_URL}/sessions/scenarios/${selectedScenario}`);
         const scenario = await scenarioRes.json();
         setPhases(Array.isArray(scenario.phases) ? scenario.phases : []);
+        setScenarioCustomOverlays(Array.isArray(scenario.customOverlays) ? scenario.customOverlays : []);
         if (scenario.incidentLat != null && scenario.incidentLng != null) {
             setIncidentLocation([scenario.incidentLat, scenario.incidentLng]);
         } else {

@@ -60,13 +60,14 @@ export const STATIC_OVERLAYS: MapOverlay[] = [
     },
 ];
 
-export function getPhaseOverlays(phase: EscalationPhase, center?: [number, number]): MapOverlay[] {
+export function getPhaseOverlays(phase: EscalationPhase, center?: [number, number], extraOverlays?: MapOverlay[]): MapOverlay[] {
     const overlays: MapOverlay[] = [];
     if (phase.floodZoneScale !== null) {
         overlays.push(makeFloodZone(phase.floodZoneScale, center));
     }
+    const allAvailable = [...STATIC_OVERLAYS, ...(extraOverlays ?? [])];
     for (const id of phase.activeOverlayIds) {
-        const overlay = STATIC_OVERLAYS.find(o => o.id === id);
+        const overlay = allAvailable.find(o => o.id === id);
         if (overlay) overlays.push(overlay);
     }
     return overlays;

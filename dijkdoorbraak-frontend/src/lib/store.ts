@@ -75,7 +75,7 @@ interface GameStore {
 
 export interface MapOverlay {
     id: string;
-    type: 'flood_zone' | 'breach_marker' | 'evacuation_zone' | 'road_blocked';
+    type: 'flood_zone' | 'breach_marker' | 'evacuation_zone' | 'road_blocked' | 'custom';
     label: string;
     color: string;
     kind: 'polygon' | 'marker';

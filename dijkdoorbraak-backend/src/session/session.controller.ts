@@ -34,7 +34,7 @@ export class SessionController {
   @Patch('scenarios/:id')
   updateScenario(
     @Param('id') id: string,
-    @Body() body: { title?: string; description?: string; phases?: any; incidentLat?: number; incidentLng?: number },
+    @Body() body: { title?: string; description?: string; phases?: any; customOverlays?: any; incidentLat?: number; incidentLng?: number },
   ) {
     return this.sessionService.updateScenario(id, body);
   }
