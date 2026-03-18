@@ -62,8 +62,18 @@ const DRAW_COLORS = [
     '#3b82f6', '#a855f7', '#ec4899', '#ffffff',
 ];
 
+function generateId(): string {
+    const arr = new Uint8Array(16);
+    crypto.getRandomValues(arr);
+    arr[6] = (arr[6] & 0x0f) | 0x40;
+    arr[8] = (arr[8] & 0x3f) | 0x80;
+    return [...arr].map((b, i) =>
+        ([4, 6, 8, 10].includes(i) ? '-' : '') + b.toString(16).padStart(2, '0')
+    ).join('');
+}
+
 function newPhase(index: number): EscalationPhase {
-    return { id: crypto.randomUUID(), name: `Fase ${index + 1}`, floodZoneScale: null, activeOverlayIds: [], injectId: null };
+    return { id: generateId(), name: `Fase ${index + 1}`, floodZoneScale: null, activeOverlayIds: [], injectId: null };
 }
 
 // ── Component ──────────────────────────────────────────────────────
@@ -324,7 +334,7 @@ export default function EditorPage() {
     async function saveCustomOverlay() {
         if (!pendingDraft || !draftLabel.trim()) return;
         const overlay: MapOverlay = {
-            id: crypto.randomUUID(),
+            id: generateId(),
             type: 'custom',
             label: draftLabel.trim(),
             color: draftColor,
@@ -444,7 +454,7 @@ export default function EditorPage() {
                 <div className="flex h-[calc(100vh-61px)]">
 
                     {/* Scenario list */}
-                    <div className="w-56 shrink-0 border-r border-zinc-800 flex flex-col">
+                    <div className="w-44 shrink-0 border-r border-zinc-800 flex flex-col">
                         <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
                             <span className="text-xs uppercase tracking-widest text-zinc-400">Scenario's</span>
                             <button
@@ -468,7 +478,7 @@ export default function EditorPage() {
                     <div className="flex flex-1 min-h-0">
 
                         {/* ── Left content panel ── */}
-                        <div className="w-[400px] shrink-0 overflow-y-auto p-5 space-y-5 border-r border-zinc-800">
+                        <div className="flex-1 overflow-y-auto p-5 space-y-5 border-r border-zinc-800">
 
                             {/* Create / edit scenario form */}
                             {editingScenario !== null && (
@@ -650,7 +660,7 @@ export default function EditorPage() {
 
                         {/* ── Map panel ── */}
                         {showMapPanel ? (
-                            <div className="flex-1 min-w-0 flex flex-col">
+                            <div className="w-[520px] shrink-0 flex flex-col border-l border-zinc-800">
 
                                 {/* Map toolbar */}
                                 <div className="shrink-0 px-4 py-2 border-b border-zinc-800 flex items-center gap-3 flex-wrap">

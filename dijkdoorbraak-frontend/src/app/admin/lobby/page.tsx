@@ -10,9 +10,19 @@ import { STATIC_OVERLAYS, FLOOD_SIZES } from '@/lib/overlayPresets';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
+function generateId(): string {
+    const arr = new Uint8Array(16);
+    crypto.getRandomValues(arr);
+    arr[6] = (arr[6] & 0x0f) | 0x40;
+    arr[8] = (arr[8] & 0x3f) | 0x80;
+    return [...arr].map((b, i) =>
+        ([4, 6, 8, 10].includes(i) ? '-' : '') + b.toString(16).padStart(2, '0')
+    ).join('');
+}
+
 function newPhase(index: number): EscalationPhase {
     return {
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: `Fase ${index + 1}`,
         floodZoneScale: null,
         activeOverlayIds: [],
