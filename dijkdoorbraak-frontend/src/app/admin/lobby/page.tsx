@@ -122,6 +122,7 @@ export default function AdminLobbyPage() {
         }
 
         setSession(newSession);
+        setPlayers([]);
         setCurrentPhaseIndex(-1);
         setCreating(false);
         const socket = getSocket();
@@ -201,16 +202,29 @@ export default function AdminLobbyPage() {
                 {/* Session code banner */}
                 {session && (
                     <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between gap-6">
-                        <div>
+                        <div className="flex-1">
                             <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Sessiecode</p>
                             <p className="text-5xl font-mono font-bold text-gray-900 tracking-widest">{session.joinCode}</p>
-                            <p className="text-gray-400 text-xs mt-1">/player/join?code={session.joinCode}</p>
                         </div>
-                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
-                            <QRCodeSVG
-                                value={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/player/join?code=${session.joinCode}`}
-                                size={96}
-                            />
+                        <div className="flex gap-6">
+                            <div className="text-center space-y-2">
+                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                                    <QRCodeSVG
+                                        value={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/player/join?code=${session.joinCode}`}
+                                        size={96}
+                                    />
+                                </div>
+                                <p className="text-gray-500 text-xs font-medium">Deelnemers</p>
+                            </div>
+                            <div className="text-center space-y-2">
+                                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                                    <QRCodeSVG
+                                        value={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/spectator/join?code=${session.joinCode}`}
+                                        size={96}
+                                    />
+                                </div>
+                                <p className="text-blue-600 text-xs font-medium">Toeschouwers</p>
+                            </div>
                         </div>
                     </div>
                 )}

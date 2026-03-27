@@ -444,15 +444,15 @@ export default function EditorPage() {
     // ── Render ─────────────────────────────────────────────────────
 
     return (
-        <main className="min-h-screen bg-zinc-950 text-white">
+        <main className="min-h-screen bg-gray-50 text-gray-900">
             {/* Top nav */}
-            <div className="border-b border-zinc-800 px-8 py-4 flex items-center gap-6">
-                <button onClick={() => router.push('/admin/lobby')} className="text-zinc-500 hover:text-white text-sm transition">← Lobby</button>
+            <div className="bg-blue-700 text-white px-8 py-4 flex items-center gap-6">
+                <button onClick={() => router.push('/admin/lobby')} className="text-blue-200 hover:text-white text-sm transition">← Lobby</button>
                 <h1 className="font-bold text-lg">Scenario Editor</h1>
                 <div className="flex gap-1 ml-4">
                     {(['scenarios', 'roles'] as Tab[]).map(t => (
                         <button key={t} onClick={() => setTab(t)}
-                            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${tab === t ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-white'}`}>
+                            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${tab === t ? 'bg-white/20 text-white' : 'text-blue-200 hover:text-white'}`}>
                             {t === 'scenarios' ? "Scenario's" : 'Rollen'}
                         </button>
                     ))}
@@ -464,23 +464,23 @@ export default function EditorPage() {
                 <div className="flex h-[calc(100vh-61px)]">
 
                     {/* Scenario list */}
-                    <div className="w-44 shrink-0 border-r border-zinc-800 flex flex-col">
-                        <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
-                            <span className="text-xs uppercase tracking-widest text-zinc-400">Scenario's</span>
+                    <div className="w-44 shrink-0 border-r border-gray-200 flex flex-col bg-white">
+                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                            <span className="text-xs uppercase tracking-widest text-gray-500">Scenario's</span>
                             <button
                                 onClick={() => { setEditingScenario('new'); setScenarioForm({ title: '', description: '' }); setSelectedScenario(null); setPhases([]); setCustomOverlays([]); }}
-                                className="text-blue-400 hover:text-blue-300 text-xs font-medium transition"
+                                className="text-blue-600 hover:text-blue-700 text-xs font-medium transition"
                             >+ Nieuw</button>
                         </div>
                         <div className="flex-1 overflow-y-auto">
                             {scenarios.map(s => (
                                 <button key={s.id}
                                     onClick={() => { loadScenario(s.id); setEditingScenario(null); cancelInjectEdit(); }}
-                                    className={`w-full text-left px-4 py-3 border-b border-zinc-800/50 transition ${selectedScenario?.id === s.id ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'}`}>
+                                    className={`w-full text-left px-4 py-3 border-b border-gray-100 transition ${selectedScenario?.id === s.id ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
                                     <p className="font-medium text-sm truncate">{s.title}</p>
                                 </button>
                             ))}
-                            {scenarios.length === 0 && <p className="text-zinc-600 text-sm text-center py-10 px-4">Nog geen scenario's.</p>}
+                            {scenarios.length === 0 && <p className="text-gray-400 text-sm text-center py-10 px-4">Nog geen scenario's.</p>}
                         </div>
                     </div>
 
@@ -488,22 +488,22 @@ export default function EditorPage() {
                     <div className="flex flex-1 min-h-0">
 
                         {/* ── Left content panel ── */}
-                        <div className="w-[380px] shrink-0 overflow-y-auto p-5 space-y-5 border-r border-zinc-800">
+                        <div className="w-[380px] shrink-0 overflow-y-auto p-5 space-y-5 border-r border-gray-200 bg-white">
 
                             {/* Create / edit scenario form */}
                             {editingScenario !== null && (
-                                <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-5 space-y-3">
-                                    <h2 className="font-semibold">{editingScenario === 'new' ? 'Nieuw scenario' : 'Scenario bewerken'}</h2>
+                                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-3">
+                                    <h2 className="font-semibold text-gray-900">{editingScenario === 'new' ? 'Nieuw scenario' : 'Scenario bewerken'}</h2>
                                     <input value={scenarioForm.title} onChange={e => setScenarioForm({ ...scenarioForm, title: e.target.value })} placeholder="Titel"
-                                        className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-4 py-2.5 text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 text-sm" />
+                                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" />
                                     <textarea value={scenarioForm.description} onChange={e => setScenarioForm({ ...scenarioForm, description: e.target.value })} placeholder="Beschrijving (optioneel)" rows={3}
-                                        className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-4 py-2.5 text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 resize-none text-sm" />
+                                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none text-sm" />
                                     <div className="flex gap-3">
                                         <button onClick={saveScenario} disabled={!scenarioForm.title.trim() || savingScenario}
-                                            className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">
+                                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">
                                             {savingScenario ? 'Opslaan...' : 'Opslaan'}
                                         </button>
-                                        <button onClick={cancelScenarioEdit} className="text-zinc-500 hover:text-white text-sm transition px-3">Annuleer</button>
+                                        <button onClick={cancelScenarioEdit} className="text-gray-500 hover:text-gray-900 text-sm transition px-3">Annuleer</button>
                                     </div>
                                 </div>
                             )}
@@ -513,66 +513,66 @@ export default function EditorPage() {
                                 <>
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
-                                            <h2 className="text-lg font-bold leading-tight">{selectedScenario.title}</h2>
-                                            {selectedScenario.description && <p className="text-zinc-400 text-sm mt-0.5">{selectedScenario.description}</p>}
+                                            <h2 className="text-lg font-bold leading-tight text-gray-900">{selectedScenario.title}</h2>
+                                            {selectedScenario.description && <p className="text-gray-500 text-sm mt-0.5">{selectedScenario.description}</p>}
                                         </div>
                                         <div className="flex gap-2 shrink-0">
-                                            <button onClick={() => startEditScenario(selectedScenario)} className="text-zinc-400 hover:text-white text-xs transition">Bewerken</button>
-                                            <button onClick={() => deleteScenario(selectedScenario.id)} className="text-red-500 hover:text-red-400 text-xs transition">Verwijderen</button>
+                                            <button onClick={() => startEditScenario(selectedScenario)} className="text-gray-500 hover:text-gray-900 text-xs transition">Bewerken</button>
+                                            <button onClick={() => deleteScenario(selectedScenario.id)} className="text-red-500 hover:text-red-600 text-xs transition">Verwijderen</button>
                                         </div>
                                     </div>
 
                                     {/* ── Injects ── */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Injects ({selectedScenario.Injects.length})</h3>
+                                            <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-500">Injects ({selectedScenario.Injects.length})</h3>
                                             <button onClick={() => { cancelInjectEdit(); setEditingInject({ id: 'new', scenarioId: selectedScenario.id, title: '', content: '', triggerTime: 0, targetRole: null }); setInjectForm({ title: '', content: '', triggerTime: '', targetRole: '' }); }}
-                                                className="text-blue-400 hover:text-blue-300 text-xs font-medium transition">+ Inject</button>
+                                                className="text-blue-600 hover:text-blue-700 text-xs font-medium transition">+ Inject</button>
                                         </div>
 
                                         {editingInject && (
-                                            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 space-y-2.5">
-                                                <p className="text-xs font-semibold text-zinc-300">{editingInject.id === 'new' ? 'Nieuwe inject' : 'Inject bewerken'}</p>
+                                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2.5">
+                                                <p className="text-xs font-semibold text-gray-700">{editingInject.id === 'new' ? 'Nieuwe inject' : 'Inject bewerken'}</p>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <input value={injectForm.title} onChange={e => setInjectForm({ ...injectForm, title: e.target.value })} placeholder="Titel"
-                                                        className="col-span-2 bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" />
+                                                        className="col-span-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                                                     <input type="number" value={injectForm.triggerTime} onChange={e => setInjectForm({ ...injectForm, triggerTime: e.target.value })} placeholder="T+ sec"
-                                                        className="bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" />
+                                                        className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                                                     <select value={injectForm.targetRole} onChange={e => setInjectForm({ ...injectForm, targetRole: e.target.value })}
-                                                        className="bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                                                        className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                                                         <option value="">Iedereen</option>
                                                         {roles.map(r => <option key={r.id} value={r.shortName}>{r.shortName} — {r.name}</option>)}
                                                     </select>
                                                 </div>
                                                 <textarea value={injectForm.content} onChange={e => setInjectForm({ ...injectForm, content: e.target.value })} placeholder="Inhoud..." rows={2}
-                                                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 resize-none" />
+                                                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none" />
                                                 <div className="flex gap-3">
                                                     <button onClick={saveInject} disabled={!injectForm.title.trim() || !injectForm.triggerTime || savingInject}
-                                                        className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-lg px-4 py-1.5 text-xs transition">
+                                                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-lg px-4 py-1.5 text-xs transition">
                                                         {savingInject ? 'Opslaan...' : 'Opslaan'}
                                                     </button>
-                                                    <button onClick={cancelInjectEdit} className="text-zinc-500 hover:text-white text-xs transition">Annuleer</button>
+                                                    <button onClick={cancelInjectEdit} className="text-gray-500 hover:text-gray-900 text-xs transition">Annuleer</button>
                                                 </div>
                                             </div>
                                         )}
 
                                         {selectedScenario.Injects.length === 0 && !editingInject && (
-                                            <p className="text-zinc-600 text-xs py-3 text-center border border-dashed border-zinc-800 rounded-xl">Nog geen injects.</p>
+                                            <p className="text-gray-400 text-xs py-3 text-center border border-dashed border-gray-200 rounded-xl">Nog geen injects.</p>
                                         )}
                                         <div className="space-y-1.5">
                                             {selectedScenario.Injects.map(inject => (
-                                                <div key={inject.id} className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 flex items-start gap-3">
+                                                <div key={inject.id} className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 flex items-start gap-3">
                                                     <div className="shrink-0">
-                                                        <p className="text-zinc-500 text-xs font-mono">T+{inject.triggerTime}s</p>
-                                                        {inject.targetRole && <p className="text-blue-400 text-xs font-mono">{inject.targetRole}</p>}
+                                                        <p className="text-gray-400 text-xs font-mono">T+{inject.triggerTime}s</p>
+                                                        {inject.targetRole && <p className="text-blue-600 text-xs font-mono">{inject.targetRole}</p>}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="font-medium text-sm text-white truncate">{inject.title}</p>
-                                                        <p className="text-zinc-500 text-xs mt-0.5 truncate">{inject.content}</p>
+                                                        <p className="font-medium text-sm text-gray-900 truncate">{inject.title}</p>
+                                                        <p className="text-gray-400 text-xs mt-0.5 truncate">{inject.content}</p>
                                                     </div>
                                                     <div className="flex gap-2 shrink-0">
-                                                        <button onClick={() => startEditInject(inject)} className="text-zinc-500 hover:text-white text-xs transition">✎</button>
-                                                        <button onClick={() => deleteInject(inject.id)} className="text-red-600 hover:text-red-400 text-xs transition">✕</button>
+                                                        <button onClick={() => startEditInject(inject)} className="text-gray-400 hover:text-gray-900 text-xs transition">✎</button>
+                                                        <button onClick={() => deleteInject(inject.id)} className="text-red-500 hover:text-red-600 text-xs transition">✕</button>
                                                     </div>
                                                 </div>
                                             ))}
@@ -582,54 +582,54 @@ export default function EditorPage() {
                                     {/* ── Phases ── */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Fasen ({phases.length})</h3>
+                                            <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-500">Fasen ({phases.length})</h3>
                                             <div className="flex items-center gap-3">
-                                                {phasesSaved && <span className="text-green-400 text-xs">✓ Opgeslagen</span>}
-                                                <button onClick={addPhase} className="text-blue-400 hover:text-blue-300 text-xs font-medium transition">+ Fase</button>
+                                                {phasesSaved && <span className="text-green-600 text-xs">✓ Opgeslagen</span>}
+                                                <button onClick={addPhase} className="text-blue-600 hover:text-blue-700 text-xs font-medium transition">+ Fase</button>
                                             </div>
                                         </div>
 
                                         {phases.length === 0 && (
-                                            <p className="text-zinc-600 text-xs py-3 text-center border border-dashed border-zinc-800 rounded-xl">Nog geen fasen.</p>
+                                            <p className="text-gray-400 text-xs py-3 text-center border border-dashed border-gray-200 rounded-xl">Nog geen fasen.</p>
                                         )}
 
                                         <div className="space-y-2">
                                             {phases.map((phase, index) => (
                                                 <div key={phase.id}
-                                                    className={`bg-zinc-900 border rounded-xl p-3 space-y-2.5 transition ${previewPhaseIndex === index ? 'border-blue-600' : 'border-zinc-800'}`}>
+                                                    className={`bg-gray-50 border rounded-xl p-3 space-y-2.5 transition ${previewPhaseIndex === index ? 'border-blue-400' : 'border-gray-200'}`}>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-zinc-600 text-xs font-mono w-4 shrink-0">{index + 1}</span>
+                                                        <span className="text-gray-400 text-xs font-mono w-4 shrink-0">{index + 1}</span>
                                                         <input value={phase.name} onChange={e => updatePhase(phase.id, { name: e.target.value })}
-                                                            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-white text-sm focus:outline-none focus:border-blue-500" />
+                                                            className="flex-1 bg-white border border-gray-300 rounded-lg px-2.5 py-1 text-gray-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                                                         <button onClick={() => setPreviewPhaseIndex(previewPhaseIndex === index ? -1 : index)}
-                                                            className={`text-xs px-2 py-1 rounded border transition shrink-0 ${previewPhaseIndex === index ? 'bg-blue-700 border-blue-500 text-white' : 'border-zinc-700 text-zinc-500 hover:text-white'}`}>
+                                                            className={`text-xs px-2 py-1 rounded border transition shrink-0 ${previewPhaseIndex === index ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-500 hover:text-gray-900 hover:border-gray-400'}`}>
                                                             {previewPhaseIndex === index ? '● Op kaart' : 'Preview'}
                                                         </button>
-                                                        <button onClick={() => removePhase(phase.id)} className="text-zinc-600 hover:text-red-400 text-xs px-1 transition">✕</button>
+                                                        <button onClick={() => removePhase(phase.id)} className="text-gray-400 hover:text-red-500 text-xs px-1 transition">✕</button>
                                                     </div>
 
                                                     {/* Flood zone */}
                                                     <div className="flex items-center gap-2 pl-6">
-                                                        <span className="text-zinc-500 text-xs w-24 shrink-0">Overstroming</span>
+                                                        <span className="text-gray-500 text-xs w-24 shrink-0">Overstroming</span>
                                                         <div className="flex gap-1">
                                                             <button onClick={() => updatePhase(phase.id, { floodZoneScale: null })}
-                                                                className={`px-2 py-0.5 rounded text-xs font-medium border transition ${phase.floodZoneScale === null ? 'bg-zinc-700 border-zinc-500 text-white' : 'border-zinc-700 text-zinc-500 hover:text-white'}`}>Geen</button>
+                                                                className={`px-2 py-0.5 rounded text-xs font-medium border transition ${phase.floodZoneScale === null ? 'bg-gray-200 border-gray-400 text-gray-900' : 'border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300'}`}>Geen</button>
                                                             {FLOOD_SIZES.map(({ label, value }) => (
                                                                 <button key={value} onClick={() => updatePhase(phase.id, { floodZoneScale: value })}
-                                                                    className={`px-2 py-0.5 rounded text-xs font-medium border transition ${phase.floodZoneScale === value ? 'bg-blue-700 border-blue-500 text-white' : 'border-zinc-700 text-zinc-500 hover:text-white'}`}>{label}</button>
+                                                                    className={`px-2 py-0.5 rounded text-xs font-medium border transition ${phase.floodZoneScale === value ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300'}`}>{label}</button>
                                                             ))}
                                                         </div>
                                                     </div>
 
                                                     {/* All overlays (static + custom) */}
                                                     <div className="flex items-start gap-2 pl-6">
-                                                        <span className="text-zinc-500 text-xs w-24 shrink-0 pt-0.5">Kaartlagen</span>
+                                                        <span className="text-gray-500 text-xs w-24 shrink-0 pt-0.5">Kaartlagen</span>
                                                         <div className="flex flex-wrap gap-1">
                                                             {allOverlaysForPhases.map(overlay => {
                                                                 const active = phase.activeOverlayIds.includes(overlay.id);
                                                                 return (
                                                                     <button key={overlay.id} onClick={() => toggleOverlayInPhase(phase.id, overlay.id)}
-                                                                        className={`px-2 py-0.5 rounded text-xs font-medium border flex items-center gap-1 transition ${active ? 'bg-zinc-700 border-zinc-500 text-white' : 'border-zinc-700 text-zinc-500 hover:text-white'}`}>
+                                                                        className={`px-2 py-0.5 rounded text-xs font-medium border flex items-center gap-1 transition ${active ? 'bg-gray-200 border-gray-400 text-gray-900' : 'border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300'}`}>
                                                                         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: overlay.color }} />
                                                                         {overlay.label}
                                                                     </button>
@@ -640,9 +640,9 @@ export default function EditorPage() {
 
                                                     {/* Inject */}
                                                     <div className="flex items-center gap-2 pl-6">
-                                                        <span className="text-zinc-500 text-xs w-24 shrink-0">Inject</span>
+                                                        <span className="text-gray-500 text-xs w-24 shrink-0">Inject</span>
                                                         <select value={phase.injectId ?? ''} onChange={e => updatePhase(phase.id, { injectId: e.target.value || null })}
-                                                            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
+                                                            className="flex-1 bg-white border border-gray-300 rounded-lg px-2.5 py-1 text-xs text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                                                             <option value="">Geen inject</option>
                                                             {selectedScenario.Injects.map(inject => (
                                                                 <option key={inject.id} value={inject.id}>T+{inject.triggerTime}s — {inject.title}{inject.targetRole ? ` (${inject.targetRole})` : ''}</option>
@@ -655,7 +655,7 @@ export default function EditorPage() {
 
                                         {phases.length > 0 && (
                                             <button onClick={savePhases} disabled={savingPhases}
-                                                className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white font-semibold rounded-xl px-4 py-1.5 text-xs transition disabled:opacity-50">
+                                                className="bg-blue-600 hover:bg-blue-700 border border-blue-600 text-white font-semibold rounded-xl px-4 py-1.5 text-xs transition disabled:opacity-50">
                                                 {savingPhases ? 'Opslaan...' : 'Fasen opslaan'}
                                             </button>
                                         )}
@@ -664,26 +664,26 @@ export default function EditorPage() {
                             )}
 
                             {!selectedScenario && editingScenario === null && (
-                                <div className="flex items-center justify-center h-64 text-zinc-600 text-sm">Selecteer een scenario of maak een nieuw aan</div>
+                                <div className="flex items-center justify-center h-64 text-gray-400 text-sm">Selecteer een scenario of maak een nieuw aan</div>
                             )}
                         </div>
 
                         {/* ── Map panel ── */}
                         {showMapPanel ? (
-                            <div className="flex-1 min-w-0 flex flex-col">
+                            <div className="flex-1 min-w-0 flex flex-col bg-gray-50">
 
                                 {/* Map toolbar */}
-                                <div className="shrink-0 px-4 py-2 border-b border-zinc-800 flex items-center gap-3 flex-wrap">
-                                    <span className="text-xs uppercase tracking-widest text-zinc-500 mr-1">Kaart</span>
+                                <div className="shrink-0 px-4 py-2 border-b border-gray-200 bg-white flex items-center gap-3 flex-wrap">
+                                    <span className="text-xs uppercase tracking-widest text-gray-400 mr-1">Kaart</span>
 
                                     {drawMode === 'none' && !pendingDraft && (
                                         <>
                                             <button onClick={() => { setDrawMode('marker'); setDrawPoints([]); }}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-lg text-xs font-medium text-zinc-300 transition">
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 transition">
                                                 📍 Markering plaatsen
                                             </button>
                                             <button onClick={() => { setDrawMode('polygon'); setDrawPoints([]); }}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-lg text-xs font-medium text-zinc-300 transition">
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 transition">
                                                 ⬡ Zone tekenen
                                             </button>
                                         </>
@@ -691,12 +691,12 @@ export default function EditorPage() {
 
                                     {drawMode === 'polygon' && (
                                         <>
-                                            <span className="text-blue-400 text-xs">Klik op de kaart om punten te plaatsen ({drawPoints.length} punt{drawPoints.length !== 1 ? 'en' : ''})</span>
+                                            <span className="text-blue-600 text-xs">Klik op de kaart om punten te plaatsen ({drawPoints.length} punt{drawPoints.length !== 1 ? 'en' : ''})</span>
                                             <button onClick={handleFinishPolygon} disabled={drawPoints.length < 3}
-                                                className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-lg text-xs font-semibold transition">
+                                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white rounded-lg text-xs font-semibold transition">
                                                 ✓ Voltooien
                                             </button>
-                                            <button onClick={handleCancelDraw} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-400 rounded-lg text-xs transition">
+                                            <button onClick={handleCancelDraw} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-600 rounded-lg text-xs transition">
                                                 Annuleer
                                             </button>
                                         </>
@@ -704,21 +704,21 @@ export default function EditorPage() {
 
                                     {drawMode === 'marker' && (
                                         <>
-                                            <span className="text-blue-400 text-xs">Klik op de kaart om een markering te plaatsen</span>
-                                            <button onClick={handleCancelDraw} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-400 rounded-lg text-xs transition">
+                                            <span className="text-blue-600 text-xs">Klik op de kaart om een markering te plaatsen</span>
+                                            <button onClick={handleCancelDraw} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-600 rounded-lg text-xs transition">
                                                 Annuleer
                                             </button>
                                         </>
                                     )}
 
-                                    <div className="ml-auto flex items-center gap-2 text-xs text-zinc-600 font-mono">
-                                        {locationSaved && <span className="text-green-400 mr-1">✓ Locatie opgeslagen</span>}
-                                        {previewPhaseIndex >= 0 && <span className="text-blue-400">Preview: {phases[previewPhaseIndex]?.name}</span>}
+                                    <div className="ml-auto flex items-center gap-2 text-xs text-gray-400 font-mono">
+                                        {locationSaved && <span className="text-green-600 mr-1">✓ Locatie opgeslagen</span>}
+                                        {previewPhaseIndex >= 0 && <span className="text-blue-600">Preview: {phases[previewPhaseIndex]?.name}</span>}
                                         <span>Lat {incidentLat.toFixed(4)}</span>
                                         <span>Lng {incidentLng.toFixed(4)}</span>
                                         {locationDirty && (
                                             <button onClick={saveLocation} disabled={savingLocation}
-                                                className="ml-1 px-2.5 py-1 bg-blue-700 hover:bg-blue-600 disabled:bg-zinc-700 text-white rounded-lg font-semibold transition">
+                                                className="ml-1 px-2.5 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 text-white rounded-lg font-semibold transition">
                                                 {savingLocation ? '...' : 'Opslaan'}
                                             </button>
                                         )}
@@ -743,8 +743,8 @@ export default function EditorPage() {
 
                                 {/* Draft form */}
                                 {pendingDraft && (
-                                    <div className="shrink-0 border-t border-zinc-800 p-4 bg-zinc-900 space-y-3">
-                                        <p className="text-xs font-semibold text-zinc-300">
+                                    <div className="shrink-0 border-t border-gray-200 p-4 bg-white space-y-3">
+                                        <p className="text-xs font-semibold text-gray-700">
                                             Nieuwe {pendingDraft.kind === 'polygon' ? 'zone' : 'markering'} — geef een naam{pendingDraft.kind === 'marker' ? ', icoon' : ''} en kleur
                                         </p>
                                         <div className="flex items-center gap-3">
@@ -753,29 +753,29 @@ export default function EditorPage() {
                                                 onChange={e => setDraftLabel(e.target.value)}
                                                 placeholder="Label (bijv. Evacuatieroute A)"
                                                 autoFocus
-                                                className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500"
+                                                className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                             />
                                             <div className="flex gap-1 shrink-0">
                                                 {DRAW_COLORS.map(c => (
                                                     <button key={c} onClick={() => setDraftColor(c)}
                                                         style={{ backgroundColor: c }}
-                                                        className={`w-6 h-6 rounded-full border-2 transition ${draftColor === c ? 'border-white scale-110' : 'border-transparent hover:scale-110'}`}
+                                                        className={`w-6 h-6 rounded-full border-2 transition ${draftColor === c ? 'border-gray-900 scale-110' : 'border-transparent hover:scale-110'}`}
                                                     />
                                                 ))}
                                             </div>
                                             <button onClick={saveCustomOverlay} disabled={!draftLabel.trim() || savingOverlays}
-                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-lg text-sm transition shrink-0">
+                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-lg text-sm transition shrink-0">
                                                 {savingOverlays ? 'Opslaan...' : 'Toevoegen'}
                                             </button>
-                                            <button onClick={() => { setPendingDraft(null); setDraftIcon(null); }} className="text-zinc-500 hover:text-white text-sm transition">✕</button>
+                                            <button onClick={() => { setPendingDraft(null); setDraftIcon(null); }} className="text-gray-400 hover:text-gray-900 text-sm transition">✕</button>
                                         </div>
                                         {pendingDraft.kind === 'marker' && (
                                             <div>
-                                                <p className="text-xs text-zinc-500 mb-1.5">Icoon (optioneel)</p>
+                                                <p className="text-xs text-gray-500 mb-1.5">Icoon (optioneel)</p>
                                                 <div className="flex flex-wrap gap-1">
                                                     {MARKER_ICONS.map(emoji => (
                                                         <button key={emoji} onClick={() => setDraftIcon(draftIcon === emoji ? null : emoji)}
-                                                            className={`w-8 h-8 rounded-lg text-lg flex items-center justify-center transition border ${draftIcon === emoji ? 'border-white bg-zinc-700' : 'border-zinc-700 hover:border-zinc-500 bg-zinc-800'}`}>
+                                                            className={`w-8 h-8 rounded-lg text-lg flex items-center justify-center transition border ${draftIcon === emoji ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-400 bg-white'}`}>
                                                             {emoji}
                                                         </button>
                                                     ))}
@@ -787,15 +787,15 @@ export default function EditorPage() {
 
                                 {/* Custom overlays list */}
                                 {customOverlays.length > 0 && (
-                                    <div className="shrink-0 border-t border-zinc-800 px-4 py-2 max-h-36 overflow-y-auto">
-                                        <p className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Aangepaste lagen ({customOverlays.length})</p>
+                                    <div className="shrink-0 border-t border-gray-200 px-4 py-2 max-h-36 overflow-y-auto bg-white">
+                                        <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">Aangepaste lagen ({customOverlays.length})</p>
                                         <div className="grid grid-cols-2 gap-1">
                                             {customOverlays.map(overlay => (
-                                                <div key={overlay.id} className="flex items-center gap-2 text-xs bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5">
+                                                <div key={overlay.id} className="flex items-center gap-2 text-xs bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5">
                                                     <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: overlay.color }} />
-                                                    <span className="flex-1 truncate text-zinc-300">{overlay.label}</span>
-                                                    <span className="text-zinc-600 shrink-0">{overlay.kind === 'polygon' ? '⬡' : (overlay.icon ?? '📍')}</span>
-                                                    <button onClick={() => deleteCustomOverlay(overlay.id)} className="text-zinc-600 hover:text-red-400 transition shrink-0">✕</button>
+                                                    <span className="flex-1 truncate text-gray-700">{overlay.label}</span>
+                                                    <span className="text-gray-400 shrink-0">{overlay.kind === 'polygon' ? '⬡' : (overlay.icon ?? '📍')}</span>
+                                                    <button onClick={() => deleteCustomOverlay(overlay.id)} className="text-gray-400 hover:text-red-500 transition shrink-0">✕</button>
                                                 </div>
                                             ))}
                                         </div>
@@ -805,7 +805,7 @@ export default function EditorPage() {
                         ) : (
                             /* Placeholder when no scenario selected */
                             !selectedScenario && editingScenario === null && (
-                                <div className="flex-1 flex items-center justify-center text-zinc-700 text-sm">
+                                <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
                                     Selecteer een scenario om de kaart te bewerken
                                 </div>
                             )
@@ -817,43 +817,43 @@ export default function EditorPage() {
             {/* ── ROLES TAB ── */}
             {tab === 'roles' && (
                 <div className="flex h-[calc(100vh-61px)]">
-                    <div className="w-56 shrink-0 border-r border-zinc-800 flex flex-col">
-                        <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
-                            <span className="text-xs uppercase tracking-widest text-zinc-400">Rollen</span>
+                    <div className="w-56 shrink-0 border-r border-gray-200 flex flex-col bg-white">
+                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                            <span className="text-xs uppercase tracking-widest text-gray-500">Rollen</span>
                             <button onClick={() => { setEditingRole('new'); setRoleForm({ name: '', shortName: '', description: '' }); setSelectedRole(null); }}
-                                className="text-blue-400 hover:text-blue-300 text-xs font-medium transition">+ Nieuw</button>
+                                className="text-blue-600 hover:text-blue-700 text-xs font-medium transition">+ Nieuw</button>
                         </div>
                         <div className="flex-1 overflow-y-auto">
                             {roles.map(r => (
                                 <button key={r.id} onClick={() => { setSelectedRole(r); setEditingRole(null); cancelAbilityEdit(); }}
-                                    className={`w-full text-left px-4 py-3 border-b border-zinc-800/50 transition ${selectedRole?.id === r.id ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'}`}>
-                                    <p className="font-mono text-xs text-zinc-500">{r.shortName}</p>
+                                    className={`w-full text-left px-4 py-3 border-b border-gray-100 transition ${selectedRole?.id === r.id ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
+                                    <p className="font-mono text-xs text-gray-400">{r.shortName}</p>
                                     <p className="font-medium text-sm truncate">{r.name}</p>
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                    <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-gray-50">
                         {editingRole !== null && (
-                            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 space-y-4 max-w-2xl">
-                                <h2 className="font-semibold text-lg">{editingRole === 'new' ? 'Nieuwe rol' : 'Rol bewerken'}</h2>
+                            <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4 max-w-2xl shadow-sm">
+                                <h2 className="font-semibold text-lg text-gray-900">{editingRole === 'new' ? 'Nieuwe rol' : 'Rol bewerken'}</h2>
                                 <div className="grid grid-cols-3 gap-3">
                                     <input value={roleForm.name} onChange={e => setRoleForm({ ...roleForm, name: e.target.value })} placeholder="Naam (bijv. Leider CoPI)"
-                                        className="col-span-2 bg-zinc-800 border border-zinc-600 rounded-xl px-4 py-2.5 text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" />
+                                        className="col-span-2 bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                                     <input value={roleForm.shortName} onChange={e => setRoleForm({ ...roleForm, shortName: e.target.value.toUpperCase() })} placeholder="Afkorting"
-                                        className="bg-zinc-800 border border-zinc-600 rounded-xl px-4 py-2.5 text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" />
+                                        className="bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 font-mono placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                                 </div>
                                 <textarea value={roleForm.description} onChange={e => setRoleForm({ ...roleForm, description: e.target.value })} placeholder="Beschrijving van de rol..." rows={3}
-                                    className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-4 py-2.5 text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 resize-none" />
+                                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none" />
                                 <div className="flex gap-3">
                                     <button onClick={saveRole} disabled={!roleForm.name.trim() || !roleForm.shortName.trim() || savingRole}
-                                        className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">
+                                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">
                                         {savingRole ? 'Opslaan...' : 'Opslaan'}
                                     </button>
-                                    <button onClick={cancelRoleEdit} className="text-zinc-500 hover:text-white text-sm transition px-3">Annuleer</button>
+                                    <button onClick={cancelRoleEdit} className="text-gray-500 hover:text-gray-900 text-sm transition px-3">Annuleer</button>
                                     {editingRole !== 'new' && (
-                                        <button onClick={() => deleteRole(editingRole)} className="ml-auto text-red-500 hover:text-red-400 text-sm transition">Rol verwijderen</button>
+                                        <button onClick={() => deleteRole(editingRole)} className="ml-auto text-red-500 hover:text-red-600 text-sm transition">Rol verwijderen</button>
                                     )}
                                 </div>
                             </div>
@@ -865,51 +865,51 @@ export default function EditorPage() {
                                     <div className="flex items-start justify-between gap-4">
                                         <div>
                                             <div className="flex items-center gap-3 mb-1">
-                                                <span className="text-xs font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded">{selectedRole.shortName}</span>
-                                                <h2 className="text-xl font-bold">{selectedRole.name}</h2>
+                                                <span className="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{selectedRole.shortName}</span>
+                                                <h2 className="text-xl font-bold text-gray-900">{selectedRole.name}</h2>
                                             </div>
-                                            {selectedRole.description && <p className="text-zinc-400 text-sm">{selectedRole.description}</p>}
+                                            {selectedRole.description && <p className="text-gray-500 text-sm">{selectedRole.description}</p>}
                                         </div>
-                                        <button onClick={() => startEditRole(selectedRole)} className="text-zinc-400 hover:text-white text-sm transition shrink-0">Bewerken</button>
+                                        <button onClick={() => startEditRole(selectedRole)} className="text-gray-500 hover:text-gray-900 text-sm transition shrink-0">Bewerken</button>
                                     </div>
                                 </div>
 
                                 <div className="max-w-2xl space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="font-semibold text-zinc-300 text-sm uppercase tracking-widest">Vaardigheden ({selectedRole.abilities.length})</h3>
+                                        <h3 className="font-semibold text-gray-500 text-sm uppercase tracking-widest">Vaardigheden ({selectedRole.abilities.length})</h3>
                                         <button onClick={() => { cancelAbilityEdit(); setEditingAbility({ id: 'new', name: '', description: null }); setAbilityForm({ name: '', description: '' }); }}
-                                            className="text-blue-400 hover:text-blue-300 text-xs font-medium transition">+ Vaardigheid</button>
+                                            className="text-blue-600 hover:text-blue-700 text-xs font-medium transition">+ Vaardigheid</button>
                                     </div>
                                     {editingAbility && (
-                                        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 space-y-3">
-                                            <p className="text-sm font-semibold text-zinc-300">{editingAbility.id === 'new' ? 'Nieuwe vaardigheid' : 'Vaardigheid bewerken'}</p>
+                                        <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3 shadow-sm">
+                                            <p className="text-sm font-semibold text-gray-700">{editingAbility.id === 'new' ? 'Nieuwe vaardigheid' : 'Vaardigheid bewerken'}</p>
                                             <input value={abilityForm.name} onChange={e => setAbilityForm({ ...abilityForm, name: e.target.value })} placeholder="Naam van de actie"
-                                                className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" />
+                                                className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                                             <input value={abilityForm.description} onChange={e => setAbilityForm({ ...abilityForm, description: e.target.value })} placeholder="Beschrijving (optioneel)"
-                                                className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" />
+                                                className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                                             <div className="flex gap-3">
                                                 <button onClick={saveAbility} disabled={!abilityForm.name.trim() || savingAbility}
-                                                    className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-lg px-4 py-1.5 text-sm transition">
+                                                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-lg px-4 py-1.5 text-sm transition">
                                                     {savingAbility ? 'Opslaan...' : 'Opslaan'}
                                                 </button>
-                                                <button onClick={cancelAbilityEdit} className="text-zinc-500 hover:text-white text-sm transition">Annuleer</button>
+                                                <button onClick={cancelAbilityEdit} className="text-gray-500 hover:text-gray-900 text-sm transition">Annuleer</button>
                                             </div>
                                         </div>
                                     )}
                                     {selectedRole.abilities.length === 0 && !editingAbility && (
-                                        <p className="text-zinc-600 text-sm py-4 text-center border border-dashed border-zinc-800 rounded-xl">Geen vaardigheden.</p>
+                                        <p className="text-gray-400 text-sm py-4 text-center border border-dashed border-gray-200 rounded-xl">Geen vaardigheden.</p>
                                     )}
                                     <div className="space-y-1.5">
                                         {selectedRole.abilities.map((a, idx) => (
-                                            <div key={a.id} className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 flex items-center gap-3">
-                                                <span className="text-zinc-600 text-xs font-mono w-5">{idx + 1}</span>
+                                            <div key={a.id} className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm">
+                                                <span className="text-gray-400 text-xs font-mono w-5">{idx + 1}</span>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-white text-sm font-medium">{a.name}</p>
-                                                    {a.description && <p className="text-zinc-500 text-xs mt-0.5">{a.description}</p>}
+                                                    <p className="text-gray-900 text-sm font-medium">{a.name}</p>
+                                                    {a.description && <p className="text-gray-400 text-xs mt-0.5">{a.description}</p>}
                                                 </div>
                                                 <div className="flex gap-2 shrink-0">
-                                                    <button onClick={() => startEditAbility(a)} className="text-zinc-500 hover:text-white text-xs transition">Bewerken</button>
-                                                    <button onClick={() => deleteAbility(a.id)} className="text-red-600 hover:text-red-400 text-xs transition">✕</button>
+                                                    <button onClick={() => startEditAbility(a)} className="text-gray-400 hover:text-gray-900 text-xs transition">Bewerken</button>
+                                                    <button onClick={() => deleteAbility(a.id)} className="text-red-500 hover:text-red-600 text-xs transition">✕</button>
                                                 </div>
                                             </div>
                                         ))}
@@ -919,7 +919,7 @@ export default function EditorPage() {
                         )}
 
                         {!selectedRole && editingRole === null && (
-                            <div className="flex items-center justify-center h-64 text-zinc-600 text-sm">Selecteer een rol of maak een nieuwe aan</div>
+                            <div className="flex items-center justify-center h-64 text-gray-400 text-sm">Selecteer een rol of maak een nieuwe aan</div>
                         )}
                     </div>
                 </div>

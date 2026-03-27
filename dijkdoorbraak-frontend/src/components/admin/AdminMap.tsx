@@ -94,8 +94,8 @@ export default function AdminMap({ sessionId, overlays, onToggleOverlay, center,
                             onClick={() => handleToggle(preset)}
                             className={`px-3 py-2 rounded-xl text-sm font-medium transition border ${
                                 active
-                                    ? 'bg-zinc-700 border-zinc-500 text-white'
-                                    : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500'
+                                    ? 'bg-gray-200 border-gray-400 text-gray-900'
+                                    : 'bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-400'
                             }`}
                         >
                             <span
