@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { useAdminStore, Decision, MapOverlay } from '@/lib/adminStore';
+import { useAdminStore, Decision } from '@/lib/adminStore';
 import { connectAdminSocket, getSocket } from '@/lib/socket';
 import { Inject } from '@/lib/store';
 import { getPhaseOverlays } from '@/lib/overlayPresets';
@@ -130,12 +130,12 @@ export default function AdminSessionPage() {
     }
 
     return (
-        <main className="min-h-screen bg-zinc-950 text-white flex flex-col overflow-hidden" style={{ height: '100vh' }}>
+        <main className="min-h-screen bg-gray-50 text-gray-900 flex flex-col overflow-hidden" style={{ height: '100vh' }}>
             {/* Top bar */}
-            <div className="flex items-center justify-between px-6 py-3 border-b border-zinc-800 shrink-0">
+            <div className="flex items-center justify-between px-6 py-3 bg-blue-700 text-white shadow-sm shrink-0">
                 <div>
                     <h1 className="font-bold text-lg">Spelleider — Sessie actief</h1>
-                    <p className="text-zinc-400 text-xs">
+                    <p className="text-blue-200 text-xs">
                         Code: <span className="font-mono font-bold text-white">{session?.joinCode}</span>
                         &nbsp;·&nbsp;{players.length} deelnemers
                     </p>
@@ -145,7 +145,7 @@ export default function AdminSessionPage() {
                 {phases.length > 0 && (
                     <div className="flex items-center gap-3">
                         <div className="text-right">
-                            <p className="text-zinc-500 text-xs uppercase tracking-widest">Fase</p>
+                            <p className="text-blue-200 text-xs uppercase tracking-widest">Fase</p>
                             <p className="text-white text-sm font-semibold">
                                 {currentPhaseIndex < 0 ? '—' : `${currentPhaseIndex + 1}/${phases.length}: ${phases[currentPhaseIndex].name}`}
                             </p>
@@ -153,7 +153,7 @@ export default function AdminSessionPage() {
                         <button
                             onClick={handleNextPhase}
                             disabled={currentPhaseIndex >= phases.length - 1}
-                            className="bg-blue-700 hover:bg-blue-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl px-4 py-2 text-sm transition"
+                            className="bg-white/20 hover:bg-white/30 disabled:bg-white/10 disabled:text-white/40 text-white font-semibold rounded-xl px-4 py-2 text-sm transition"
                         >
                             {currentPhaseIndex < 0
                                 ? `▶ ${phases[0].name}`
@@ -167,41 +167,41 @@ export default function AdminSessionPage() {
                 <button
                     onClick={stopScenario}
                     disabled={stopping}
-                    className="bg-red-700 hover:bg-red-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl px-5 py-2 transition text-sm"
+                    className="bg-red-500 hover:bg-red-400 disabled:bg-white/10 disabled:text-white/40 text-white font-semibold rounded-xl px-5 py-2 transition text-sm"
                 >
                     {stopping ? 'Stoppen...' : '⏹ Stop scenario'}
                 </button>
             </div>
 
             {/* Three-panel body */}
-            <div className="flex flex-1 min-h-0 divide-x divide-zinc-800">
+            <div className="flex flex-1 min-h-0 divide-x divide-gray-200">
 
                 {/* LEFT — Action feed */}
-                <div className="w-80 shrink-0 flex flex-col min-h-0">
-                    <div className="px-4 py-3 border-b border-zinc-800 shrink-0">
-                        <h2 className="font-semibold text-sm uppercase tracking-widest text-zinc-400">Actiefeed</h2>
+                <div className="w-80 shrink-0 flex flex-col min-h-0 bg-white">
+                    <div className="px-4 py-3 border-b border-gray-100 shrink-0 bg-gray-50">
+                        <h2 className="font-semibold text-sm uppercase tracking-widest text-gray-500">Actiefeed</h2>
                     </div>
                     <div className="flex-1 overflow-y-auto p-3 space-y-2">
                         {decisions.length === 0 && (
-                            <p className="text-zinc-600 text-sm text-center pt-8">Nog geen acties...</p>
+                            <p className="text-gray-400 text-sm text-center pt-8">Nog geen acties...</p>
                         )}
                         {decisions.map((d) => (
                             <div
                                 key={d.id}
                                 className={`rounded-xl p-3 text-sm border ${
                                     d.customAction && d.adminApproved === null
-                                        ? 'border-amber-600/50 bg-amber-950/30'
-                                        : 'border-zinc-800 bg-zinc-900'
+                                        ? 'border-amber-300 bg-amber-50'
+                                        : 'border-gray-100 bg-gray-50'
                                 }`}
                             >
-                                <p className="font-medium text-zinc-200 mb-1">{roleLabel(d.playerId)}</p>
+                                <p className="font-medium text-gray-800 mb-1">{roleLabel(d.playerId)}</p>
                                 {d.customAction ? (
-                                    <p className="text-zinc-400 italic">"{d.customAction}"</p>
+                                    <p className="text-gray-600 italic">"{d.customAction}"</p>
                                 ) : (
-                                    <p className="text-zinc-400">{d.ability?.name ?? 'Vaardigheid ingezet'}</p>
+                                    <p className="text-gray-500">{d.ability?.name ?? 'Vaardigheid ingezet'}</p>
                                 )}
                                 {d.adminApproved !== null && (
-                                    <p className={`text-xs mt-1 font-medium ${d.adminApproved ? 'text-green-400' : 'text-red-400'}`}>
+                                    <p className={`text-xs mt-1 font-medium ${d.adminApproved ? 'text-green-600' : 'text-red-500'}`}>
                                         {d.adminApproved ? '✓ Goedgekeurd' : '✗ Afgewezen'}
                                         {d.score !== null ? ` · Score: ${d.score}` : ''}
                                     </p>
@@ -212,8 +212,8 @@ export default function AdminSessionPage() {
                 </div>
 
                 {/* CENTER — Map + inject trigger */}
-                <div className="flex-1 flex flex-col min-h-0 p-4 gap-4">
-                    <div className="flex-1 min-h-0">
+                <div className="flex-1 flex flex-col min-h-0 p-4 gap-4 bg-gray-50">
+                    <div className="flex-1 min-h-0 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
                         {session && (
                             <AdminMap
                                 sessionId={session.id}
@@ -226,15 +226,15 @@ export default function AdminSessionPage() {
                     </div>
 
                     {/* Manual inject trigger */}
-                    <div className="shrink-0 bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3 items-end">
+                    <div className="shrink-0 bg-white border border-gray-200 rounded-xl p-4 flex gap-3 items-end shadow-sm">
                         <div className="flex-1">
-                            <label className="text-zinc-400 text-xs uppercase tracking-widest block mb-1">
+                            <label className="text-gray-500 text-xs uppercase tracking-widest block mb-1">
                                 Inject handmatig sturen
                             </label>
                             <select
                                 value={selectedInject}
                                 onChange={(e) => setSelectedInject(e.target.value)}
-                                className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                                className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                             >
                                 <option value="">Selecteer inject...</option>
                                 {injects.map((inject: Inject) => (
@@ -248,7 +248,7 @@ export default function AdminSessionPage() {
                         <button
                             onClick={fireInject}
                             disabled={!selectedInject}
-                            className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-lg px-4 py-2 text-sm transition shrink-0"
+                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-lg px-4 py-2 text-sm transition shrink-0"
                         >
                             Verstuur
                         </button>
@@ -256,23 +256,23 @@ export default function AdminSessionPage() {
                 </div>
 
                 {/* RIGHT — Custom action responses */}
-                <div className="w-80 shrink-0 flex flex-col min-h-0">
-                    <div className="px-4 py-3 border-b border-zinc-800 shrink-0 flex items-center justify-between">
-                        <h2 className="font-semibold text-sm uppercase tracking-widest text-zinc-400">Reacties vereist</h2>
+                <div className="w-80 shrink-0 flex flex-col min-h-0 bg-white">
+                    <div className="px-4 py-3 border-b border-gray-100 shrink-0 bg-gray-50 flex items-center justify-between">
+                        <h2 className="font-semibold text-sm uppercase tracking-widest text-gray-500">Reacties vereist</h2>
                         {pendingCustomActions.length > 0 && (
-                            <span className="bg-amber-500 text-black text-xs font-bold rounded-full px-2 py-0.5">
+                            <span className="bg-amber-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
                                 {pendingCustomActions.length}
                             </span>
                         )}
                     </div>
                     <div className="flex-1 overflow-y-auto p-3 space-y-3">
                         {pendingCustomActions.length === 0 && (
-                            <p className="text-zinc-600 text-sm text-center pt-8">Geen openstaande acties...</p>
+                            <p className="text-gray-400 text-sm text-center pt-8">Geen openstaande acties...</p>
                         )}
                         {pendingCustomActions.map((d) => (
-                            <div key={d.id} className="bg-zinc-900 border border-amber-600/40 rounded-xl p-3 space-y-2">
-                                <p className="font-medium text-sm text-zinc-200">{roleLabel(d.playerId)}</p>
-                                <p className="text-amber-300 text-sm italic">"{d.customAction}"</p>
+                            <div key={d.id} className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2">
+                                <p className="font-medium text-sm text-gray-800">{roleLabel(d.playerId)}</p>
+                                <p className="text-amber-700 text-sm italic">"{d.customAction}"</p>
                                 {respondingTo?.id === d.id ? (
                                     <div className="space-y-2">
                                         <textarea
@@ -280,31 +280,31 @@ export default function AdminSessionPage() {
                                             onChange={(e) => setResponseText(e.target.value)}
                                             placeholder="Reactie (optioneel)..."
                                             rows={2}
-                                            className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 resize-none"
+                                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                                         />
                                         <input
                                             type="number"
                                             value={responseScore}
                                             onChange={(e) => setResponseScore(e.target.value)}
                                             placeholder="Score (optioneel)"
-                                            className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500"
+                                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                         />
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => submitResponse(true)}
-                                                className="flex-1 bg-green-700 hover:bg-green-600 text-white text-sm font-semibold rounded-lg py-1.5 transition"
+                                                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg py-1.5 transition"
                                             >
                                                 ✓ Goed
                                             </button>
                                             <button
                                                 onClick={() => submitResponse(false)}
-                                                className="flex-1 bg-red-700 hover:bg-red-600 text-white text-sm font-semibold rounded-lg py-1.5 transition"
+                                                className="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg py-1.5 transition"
                                             >
                                                 ✗ Afwijzen
                                             </button>
                                             <button
                                                 onClick={() => setRespondingTo(null)}
-                                                className="bg-zinc-700 hover:bg-zinc-600 text-white text-sm rounded-lg px-3 py-1.5 transition"
+                                                className="bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm rounded-lg px-3 py-1.5 transition"
                                             >
                                                 ✕
                                             </button>
@@ -313,7 +313,7 @@ export default function AdminSessionPage() {
                                 ) : (
                                     <button
                                         onClick={() => setRespondingTo(d)}
-                                        className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg py-1.5 transition border border-zinc-700"
+                                        className="w-full bg-white hover:bg-gray-50 text-gray-700 text-sm rounded-lg py-1.5 transition border border-gray-200"
                                     >
                                         Reageer
                                     </button>

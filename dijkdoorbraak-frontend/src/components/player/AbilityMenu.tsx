@@ -31,7 +31,7 @@ export default function AbilityMenu() {
             {/* Submitted feedback */}
             {submitted && (
                 <div className="absolute bottom-24 left-0 right-0 z-20 flex justify-center px-4">
-                    <div className="bg-green-900/90 border border-green-600 rounded-xl px-4 py-3 text-green-300 text-sm">
+                    <div className="bg-green-50 border border-green-300 rounded-xl px-4 py-3 text-green-700 text-sm shadow-md">
                         Actie ingediend: {submitted}
                     </div>
                 </div>
@@ -39,17 +39,17 @@ export default function AbilityMenu() {
 
             {/* Ability list */}
             {open && (
-                <div className="absolute right-4 z-20 w-72 bg-zinc-900/95 backdrop-blur border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden" style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
-                    <div className="px-4 py-3 border-b border-zinc-800">
-                        <p className="text-zinc-400 text-xs uppercase tracking-widest">Acties</p>
-                        <p className="text-white font-bold text-sm">{player?.role?.name}</p>
+                <div className="absolute right-4 z-20 w-72 bg-white/95 backdrop-blur border border-gray-200 rounded-2xl shadow-xl overflow-hidden" style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                        <p className="text-gray-500 text-xs uppercase tracking-widest">Acties</p>
+                        <p className="text-gray-900 font-bold text-sm">{player?.role?.name}</p>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                         {abilities.map((ability) => (
                             <button
                                 key={ability.id}
                                 onClick={() => submitAbility(ability.id, ability.name)}
-                                className="w-full text-left px-4 py-3 text-white text-sm hover:bg-zinc-800 border-b border-zinc-800/50 last:border-0 transition"
+                                className="w-full text-left px-4 py-3 text-gray-800 text-sm hover:bg-blue-50 hover:text-blue-700 border-b border-gray-100 last:border-0 transition"
                             >
                                 {ability.name}
                             </button>
@@ -61,7 +61,7 @@ export default function AbilityMenu() {
             {/* FAB button */}
             <button
                 onClick={() => setOpen(!open)}
-                className="absolute right-4 z-20 w-14 h-14 bg-blue-600 hover:bg-blue-500 rounded-full shadow-xl flex items-center justify-center transition"
+                className="absolute right-4 z-20 w-14 h-14 bg-blue-600 hover:bg-blue-700 rounded-full shadow-xl flex items-center justify-center transition"
                 style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
             >
                 <span className="text-white text-2xl">{open ? '✕' : '⚡'}</span>

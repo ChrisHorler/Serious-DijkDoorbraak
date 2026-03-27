@@ -41,32 +41,35 @@ export default function AdminLoginPage() {
     }
 
     return (
-    <main className="min-h-screen bg-zinc-950 flex items-center justify-center px-6">
-        <div className="w-full max-w-sm space-y-8">
-            <div className="text-center space-y-2">
-                <h1 className="text-3xl font-bold text-white">Spelleider</h1>
-                <p className="text-zinc-400 text-sm">Toegang tot het dashboard</p>
-            </div>
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+            <div className="w-full max-w-sm space-y-8">
+                <div className="text-center space-y-2">
+                    <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl mb-2">
+                        <span className="text-white text-2xl">🛡</span>
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900">Spelleider</h1>
+                    <p className="text-gray-500 text-sm">Toegang tot het dashboard</p>
+                </div>
 
-            <div className="space-y-4">
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                    placeholder="Wachtwoord"
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 transition"
-                />
-                {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-                <button
-                    onClick={handleLogin}
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl py-3 transition"
-                >
-                    {loading ? 'Inloggen...' : 'Inloggen'}
-                </button>
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                        placeholder="Wachtwoord"
+                        className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                    />
+                    {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+                    <button
+                        onClick={handleLogin}
+                        disabled={loading}
+                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl py-3 transition"
+                    >
+                        {loading ? 'Inloggen...' : 'Inloggen'}
+                    </button>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
     );
 }

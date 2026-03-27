@@ -169,52 +169,60 @@ export default function AdminLobbyPage() {
     }
 
     return (
-        <main className="min-h-screen bg-zinc-950 text-white p-8">
-            <div className="max-w-5xl mx-auto space-y-8">
-
-                {/* Header */}
-                <div className="flex items-center justify-between">
+        <main className="min-h-screen bg-gray-50 text-gray-900">
+            {/* Header bar */}
+            <div className="bg-blue-700 text-white px-8 py-4 shadow-sm">
+                <div className="max-w-5xl mx-auto flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Spelleider Dashboard</h1>
-                        <p className="text-zinc-400 text-sm">Lobby beheer</p>
+                        <h1 className="text-lg font-bold">Spelleider Dashboard</h1>
+                        <p className="text-blue-200 text-xs">Lobby beheer</p>
                     </div>
-                    <button
-                        onClick={() => router.push('/admin/editor')}
-                        className="ml-4 text-zinc-400 hover:text-white text-sm border border-zinc-700 hover:border-zinc-500 rounded-lg px-3 py-1.5 transition"
-                    >
-                        ✏ Editor
-                    </button>
-                    {session && (
-                        <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => router.push('/admin/editor')}
+                            className="text-blue-200 hover:text-white text-sm border border-blue-500 hover:border-blue-300 rounded-lg px-3 py-1.5 transition"
+                        >
+                            ✏ Editor
+                        </button>
+                        {session && (
                             <button
                                 onClick={abandonSession}
-                                className="text-zinc-500 hover:text-red-400 text-sm transition"
+                                className="text-blue-200 hover:text-red-300 text-sm transition"
                             >
                                 Verlaat sessie
                             </button>
-                            <div className="text-right">
-                                <p className="text-zinc-400 text-xs uppercase tracking-widest">Sessiecode</p>
-                                <p className="text-4xl font-mono font-bold tracking-widest">{session.joinCode}</p>
-                                <p className="text-zinc-500 text-xs mt-1">/player/join?code={session.joinCode}</p>
-                            </div>
-                            <div className="bg-white p-2 rounded-xl">
-                                <QRCodeSVG
-                                    value={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/player/join?code=${session.joinCode}`}
-                                    size={96}
-                                />
-                            </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
+            </div>
+
+            <div className="max-w-5xl mx-auto p-8 space-y-6">
+
+                {/* Session code banner */}
+                {session && (
+                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between gap-6">
+                        <div>
+                            <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Sessiecode</p>
+                            <p className="text-5xl font-mono font-bold text-gray-900 tracking-widest">{session.joinCode}</p>
+                            <p className="text-gray-400 text-xs mt-1">/player/join?code={session.joinCode}</p>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                            <QRCodeSVG
+                                value={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/player/join?code=${session.joinCode}`}
+                                size={96}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Create session */}
                 {!session && (
-                    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 space-y-4">
-                        <h2 className="font-semibold text-lg">Nieuwe sessie</h2>
+                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-4">
+                        <h2 className="font-semibold text-lg text-gray-900">Nieuwe sessie</h2>
                         <select
                             value={selectedScenario}
                             onChange={(e) => setSelectedScenario(e.target.value)}
-                            className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                            className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         >
                             <option value="">Selecteer een scenario</option>
                             {scenarios.map((s) => (
@@ -224,7 +232,7 @@ export default function AdminLobbyPage() {
                         <button
                             onClick={createSession}
                             disabled={!selectedScenario || creating}
-                            className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl px-6 py-3 transition"
+                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl px-6 py-3 transition"
                         >
                             {creating ? 'Aanmaken...' : 'Sessie aanmaken'}
                         </button>
@@ -233,23 +241,23 @@ export default function AdminLobbyPage() {
 
                 {/* Player roster */}
                 {session && (
-                    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl overflow-hidden">
-                        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
-                            <h2 className="font-semibold text-lg">Deelnemers ({players.length})</h2>
+                    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                            <h2 className="font-semibold text-lg text-gray-900">Deelnemers ({players.length})</h2>
                             <button
                                 onClick={startScenario}
                                 disabled={starting || players.length === 0}
-                                className="bg-green-600 hover:bg-green-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl px-6 py-2 transition"
+                                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl px-6 py-2 transition"
                             >
                                 {starting ? 'Starten...' : '▶ Start scenario'}
                             </button>
                         </div>
                         {players.length === 0 ? (
-                            <div className="px-6 py-12 text-center text-zinc-500">Wachten op deelnemers...</div>
+                            <div className="px-6 py-12 text-center text-gray-400">Wachten op deelnemers...</div>
                         ) : (
                             <table className="w-full">
                                 <thead>
-                                    <tr className="border-b border-zinc-800 text-zinc-400 text-xs uppercase tracking-widest">
+                                    <tr className="border-b border-gray-100 text-gray-500 text-xs uppercase tracking-widest">
                                         <th className="text-left px-6 py-3">Naam</th>
                                         <th className="text-left px-6 py-3">Rol</th>
                                         <th className="text-left px-6 py-3">Status</th>
@@ -257,13 +265,13 @@ export default function AdminLobbyPage() {
                                 </thead>
                                 <tbody>
                                     {players.map((player) => (
-                                        <tr key={player.id} className="border-b border-zinc-800/50 last:border-0">
-                                            <td className="px-6 py-4 font-medium">{player.nickname}</td>
+                                        <tr key={player.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50">
+                                            <td className="px-6 py-4 font-medium text-gray-900">{player.nickname}</td>
                                             <td className="px-6 py-4">
                                                 <select
                                                     value={player.roleId ?? ''}
                                                     onChange={(e) => assignRole(player.id, e.target.value)}
-                                                    className="bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                                                    className="bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                                 >
                                                     <option value="">Geen rol</option>
                                                     {roles.map((role: Role) => (
@@ -275,8 +283,8 @@ export default function AdminLobbyPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-green-400" />
-                                                    <span className="text-zinc-400 text-sm">Online</span>
+                                                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                                                    <span className="text-gray-500 text-sm">Online</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -289,40 +297,40 @@ export default function AdminLobbyPage() {
 
                 {/* Escalation phase setup */}
                 {session && (
-                    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl overflow-hidden">
-                        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+                    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                             <div>
-                                <h2 className="font-semibold text-lg">Escalatiefasen</h2>
-                                <p className="text-zinc-500 text-xs mt-0.5">Stel de kaartlagen en injects per fase in. Gebruik &quot;Volgende fase&quot; tijdens het scenario om door te schakelen.</p>
+                                <h2 className="font-semibold text-lg text-gray-900">Escalatiefasen</h2>
+                                <p className="text-gray-500 text-xs mt-0.5">Stel de kaartlagen en injects per fase in. Gebruik &quot;Volgende fase&quot; tijdens het scenario om door te schakelen.</p>
                             </div>
                             <button
                                 onClick={addPhase}
-                                className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white text-sm font-semibold rounded-xl px-4 py-2 transition"
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl px-4 py-2 transition"
                             >
                                 + Fase toevoegen
                             </button>
                         </div>
 
                         {phases.length === 0 ? (
-                            <div className="px-6 py-10 text-center text-zinc-600 text-sm">
+                            <div className="px-6 py-10 text-center text-gray-400 text-sm">
                                 Nog geen fasen ingesteld. Voeg een fase toe om te beginnen.
                             </div>
                         ) : (
-                            <div className="divide-y divide-zinc-800">
+                            <div className="divide-y divide-gray-100">
                                 {phases.map((phase, index) => (
                                     <div key={phase.id} className="px-6 py-5 space-y-4">
                                         {/* Phase header */}
                                         <div className="flex items-center gap-3">
-                                            <span className="text-zinc-500 text-xs font-mono w-6">{index + 1}</span>
+                                            <span className="text-gray-400 text-xs font-mono w-6">{index + 1}</span>
                                             <input
                                                 value={phase.name}
                                                 onChange={(e) => updatePhase(phase.id, { name: e.target.value })}
-                                                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-blue-500"
+                                                className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-gray-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                                 placeholder="Naam fase"
                                             />
                                             <button
                                                 onClick={() => removePhase(phase.id)}
-                                                className="text-zinc-600 hover:text-red-400 text-sm transition px-2"
+                                                className="text-gray-400 hover:text-red-500 text-sm transition px-2"
                                             >
                                                 Verwijder
                                             </button>
@@ -330,14 +338,14 @@ export default function AdminLobbyPage() {
 
                                         {/* Flood zone size */}
                                         <div className="flex items-center gap-3 pl-9">
-                                            <span className="text-zinc-400 text-xs w-32 shrink-0">Overstromingsgebied</span>
+                                            <span className="text-gray-500 text-xs w-32 shrink-0">Overstromingsgebied</span>
                                             <div className="flex gap-1.5">
                                                 <button
                                                     onClick={() => updatePhase(phase.id, { floodZoneScale: null })}
                                                     className={`px-3 py-1 rounded-lg text-xs font-medium transition border ${
                                                         phase.floodZoneScale === null
-                                                            ? 'bg-zinc-700 border-zinc-500 text-white'
-                                                            : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-white'
+                                                            ? 'bg-gray-200 border-gray-400 text-gray-900'
+                                                            : 'bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300'
                                                     }`}
                                                 >
                                                     Geen
@@ -348,8 +356,8 @@ export default function AdminLobbyPage() {
                                                         onClick={() => updatePhase(phase.id, { floodZoneScale: value })}
                                                         className={`px-3 py-1 rounded-lg text-xs font-medium transition border ${
                                                             phase.floodZoneScale === value
-                                                                ? 'bg-blue-700 border-blue-500 text-white'
-                                                                : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-white'
+                                                                ? 'bg-blue-600 border-blue-600 text-white'
+                                                                : 'bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300'
                                                         }`}
                                                     >
                                                         {label}
@@ -360,7 +368,7 @@ export default function AdminLobbyPage() {
 
                                         {/* Other overlays */}
                                         <div className="flex items-center gap-3 pl-9">
-                                            <span className="text-zinc-400 text-xs w-32 shrink-0">Kaartlagen</span>
+                                            <span className="text-gray-500 text-xs w-32 shrink-0">Kaartlagen</span>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {STATIC_OVERLAYS.map((overlay) => {
                                                     const active = phase.activeOverlayIds.includes(overlay.id);
@@ -370,8 +378,8 @@ export default function AdminLobbyPage() {
                                                             onClick={() => toggleOverlayInPhase(phase.id, overlay.id)}
                                                             className={`px-3 py-1 rounded-lg text-xs font-medium transition border flex items-center gap-1.5 ${
                                                                 active
-                                                                    ? 'bg-zinc-700 border-zinc-500 text-white'
-                                                                    : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-white'
+                                                                    ? 'bg-gray-200 border-gray-400 text-gray-900'
+                                                                    : 'bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300'
                                                             }`}
                                                         >
                                                             <span
@@ -387,11 +395,11 @@ export default function AdminLobbyPage() {
 
                                         {/* Inject */}
                                         <div className="flex items-center gap-3 pl-9">
-                                            <span className="text-zinc-400 text-xs w-32 shrink-0">Inject sturen</span>
+                                            <span className="text-gray-500 text-xs w-32 shrink-0">Inject sturen</span>
                                             <select
                                                 value={phase.injectId ?? ''}
                                                 onChange={(e) => updatePhase(phase.id, { injectId: e.target.value || null })}
-                                                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                                                className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                             >
                                                 <option value="">Geen inject</option>
                                                 {injects.map((inject) => (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSocket } from '@/lib/socket';
 import { useGameStore, MapOverlay } from '@/lib/store';
@@ -28,7 +28,7 @@ export default function GamePage() {
             addToast(data.inject);
             setActiveInject(data.inject);
         });
-    
+
         socket.on('action_response', (data: any) => {
             console.log('action_response:', data);
         });
@@ -55,15 +55,15 @@ export default function GamePage() {
     }, [player, session]);
 
     return (
-        <main className="relative w-full h-dvh overflow-hidden bg-zinc-950">
+        <main className="relative w-full h-dvh overflow-hidden bg-gray-100">
             {/* Map fills the screen */}
             <GameMap overlays={overlays} />
 
             {/* Role badge top left */}
             {player?.role && (
-                <div className="absolute top-4 left-4 z-10 bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl px-4 py-2">
-                    <p className="text-zinc-400 text-xs uppercase tracking-widest">Jouw rol</p>
-                    <p className="text-white font-bold text-sm">{player.role.name}</p>
+                <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur border border-gray-200 rounded-xl px-4 py-2 shadow-md">
+                    <p className="text-gray-500 text-xs uppercase tracking-widest">Jouw rol</p>
+                    <p className="text-gray-900 font-bold text-sm">{player.role.name}</p>
                 </div>
             )}
 

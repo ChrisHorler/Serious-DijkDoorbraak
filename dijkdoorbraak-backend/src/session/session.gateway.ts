@@ -77,5 +77,24 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       return { success: false, message: error.message };
     }
   }
+
+  @SubscribeMessage('spectator_join')
+  async handleSpectatorJoin(
+    @MessageBody() data: { joinCode: string; name: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const session = await this.sessionService.getSessionByJoinCode(data.joinCode.toUpperCase());
+      const players = await this.playerService.getPlayerInSession(session.id);
+
+      client.join(session.id);
+      client.data.role = 'spectator';
+      client.data.sessionId = session.id;
+
+      return { success: true, session, players };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  }
 }
 
