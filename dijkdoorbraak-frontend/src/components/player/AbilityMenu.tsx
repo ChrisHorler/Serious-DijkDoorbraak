@@ -3,31 +3,57 @@
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
 import { getSocket } from '@/lib/socket';
+import ActionDetailModal, { ActionDetails } from './ActionDetailModal';
 
 export default function AbilityMenu() {
     const [open, setOpen] = useState(false);
     const [submitted, setSubmitted] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [pendingAbility, setPendingAbility] = useState<{ id: string; name: string } | null>(null);
     const { player, session } = useGameStore();
 
     const abilities = player?.role?.abilities ?? [];
 
-    async function submitAbility(abilityId: string, abilityName: string) {
+    function openDetail(abilityId: string, abilityName: string) {
+        setOpen(false);
+        setPendingAbility({ id: abilityId, name: abilityName });
+    }
+
+    function submitAbility(details: ActionDetails) {
+        if (!pendingAbility || submitting) return;
+        setSubmitting(true);
         const socket = getSocket();
         socket.emit('submit_action', {
             playerId: player?.id,
             sessionId: session?.id,
-            abilityId,
+            abilityId: pendingAbility.id,
+            actionUrgency: details.urgency,
+            actionLat: details.location?.[0] ?? null,
+            actionLng: details.location?.[1] ?? null,
+            actionDetail: details.detail || null,
         }, (res: any) => {
+            setSubmitting(false);
+            setPendingAbility(null);
             if (res.success) {
-                setSubmitted(abilityName);
+                setSubmitted(pendingAbility.name);
                 setTimeout(() => setSubmitted(null), 3000);
-                setOpen(false);
+            } else {
+                alert(res.message ?? 'Actie mislukt. Probeer het opnieuw.');
             }
         });
     }
 
     return (
         <>
+            {/* Action detail modal */}
+            {pendingAbility && (
+                <ActionDetailModal
+                    abilityName={pendingAbility.name}
+                    onSubmit={submitAbility}
+                    onCancel={() => setPendingAbility(null)}
+                />
+            )}
+
             {/* Submitted feedback */}
             {submitted && (
                 <div className="absolute bottom-24 left-0 right-0 z-20 flex justify-center px-4">
@@ -48,10 +74,14 @@ export default function AbilityMenu() {
                         {abilities.map((ability) => (
                             <button
                                 key={ability.id}
-                                onClick={() => submitAbility(ability.id, ability.name)}
-                                className="w-full text-left px-4 py-3 text-gray-800 text-sm hover:bg-blue-50 hover:text-blue-700 border-b border-gray-100 last:border-0 transition"
+                                onClick={() => openDetail(ability.id, ability.name)}
+                                disabled={submitting}
+                                className="w-full text-left px-4 py-3 text-gray-800 text-sm hover:bg-blue-50 hover:text-blue-700 border-b border-gray-100 last:border-0 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {ability.name}
+                                <span className="font-medium">{ability.name}</span>
+                                {ability.description && (
+                                    <p className="text-gray-400 text-xs mt-0.5 truncate">{ability.description}</p>
+                                )}
                             </button>
                         ))}
                     </div>

@@ -7,6 +7,10 @@ export interface SpectatorDecision {
     playerId: string;
     customAction: string | null;
     ability: { name: string } | null;
+    actionLat: number | null;
+    actionLng: number | null;
+    actionDetail: string | null;
+    actionUrgency: string | null;
     adminApproved: boolean | null;
     score: number | null;
     timestamp: string;

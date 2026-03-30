@@ -11,7 +11,7 @@ export class RoleController {
     }
 
     @Post()
-    create(@Body() body: { name: string; shortName: string; description?: string }) {
+    create(@Body() body: { name: string; shortName: string; description?: string; briefing?: string }) {
         return this.roleService.createRole(body);
     }
 
@@ -21,7 +21,7 @@ export class RoleController {
     }
 
     @Patch(":id")
-    update(@Param("id") id: string, @Body() body: { name?: string; shortName?: string; description?: string }) {
+    update(@Param("id") id: string, @Body() body: { name?: string; shortName?: string; description?: string; briefing?: string }) {
         return this.roleService.updateRole(id, body);
     }
 

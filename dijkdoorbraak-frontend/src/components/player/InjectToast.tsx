@@ -31,9 +31,14 @@ export default function InjectToast() {
                 <div className="flex items-start gap-3">
                     <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse mt-1.5 shrink-0" />
                     <div>
-                        <p className="text-red-300 text-xs uppercase tracking-widest font-medium mb-1">
-                            Nieuw Incident
-                        </p>
+                        <div className="flex items-center gap-2 mb-1">
+                            <p className="text-red-300 text-xs uppercase tracking-widest font-medium">Nieuw Incident</p>
+                            {toast.targetRole && (
+                                <span className="bg-white/20 text-white text-xs font-mono px-1.5 py-0.5 rounded">
+                                    → {toast.targetRole}
+                                </span>
+                            )}
+                        </div>
                         <p className="text-white font-bold text-sm">{toast.title}</p>
                         <p className="text-red-200 text-xs mt-1 line-clamp-2">{toast.content}</p>
                         <p className="text-red-400 text-xs mt-2">Tik voor details</p>

@@ -14,7 +14,7 @@ export default function SpectatorGamePage() {
     const {
         session, players, overlays, injects, decisions,
         addInject, addDecision, updateDecision, addOverlay, setOverlays,
-        currentPhase, setCurrentPhase,
+        currentPhase, setCurrentPhase, reset,
     } = useSpectatorStore();
 
     const [activeInject, setActiveInject] = useState<Inject | null>(null);
@@ -53,6 +53,7 @@ export default function SpectatorGamePage() {
         });
 
         socket.on('scenario_stopped', () => {
+            reset();
             router.push('/spectator/join');
         });
 
@@ -201,11 +202,28 @@ export default function SpectatorGamePage() {
                                                 : 'border-gray-100 bg-gray-50'
                                         }`}
                                     >
-                                        <p className="font-medium text-gray-800 mb-1">{roleLabel(d.playerId)}</p>
+                                        <div className="flex items-start justify-between gap-2 mb-1">
+                                            <p className="font-medium text-gray-800">{roleLabel(d.playerId)}</p>
+                                            {d.actionUrgency && (
+                                                <span className={`text-xs px-1.5 py-0.5 rounded-full shrink-0 ${
+                                                    d.actionUrgency === 'high' ? 'bg-red-100 text-red-700' :
+                                                    d.actionUrgency === 'medium' ? 'bg-amber-100 text-amber-700' :
+                                                    'bg-green-100 text-green-700'
+                                                }`}>
+                                                    {d.actionUrgency === 'high' ? 'Hoog' : d.actionUrgency === 'medium' ? 'Middel' : 'Laag'}
+                                                </span>
+                                            )}
+                                        </div>
                                         {d.customAction ? (
                                             <p className="text-gray-600 italic text-xs">"{d.customAction}"</p>
                                         ) : (
                                             <p className="text-gray-500 text-xs">{d.ability?.name ?? 'Vaardigheid ingezet'}</p>
+                                        )}
+                                        {d.actionDetail && (
+                                            <p className="text-gray-400 text-xs mt-0.5 italic">"{d.actionDetail}"</p>
+                                        )}
+                                        {d.actionLat != null && d.actionLng != null && (
+                                            <p className="text-blue-500 text-xs mt-0.5 font-mono">📍 {d.actionLat.toFixed(4)}, {d.actionLng.toFixed(4)}</p>
                                         )}
                                         {d.adminApproved !== null && (
                                             <p className={`text-xs mt-1 font-medium ${d.adminApproved ? 'text-green-600' : 'text-red-500'}`}>

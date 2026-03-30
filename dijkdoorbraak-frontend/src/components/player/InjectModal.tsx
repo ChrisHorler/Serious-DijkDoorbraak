@@ -12,9 +12,12 @@ export default function InjectModal() {
             <div className="bg-white border border-gray-200 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
                 <div className="flex items-center gap-2 mb-4">
                     <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                    <p className="text-red-600 text-xs uppercase tracking-widest font-medium">
-                        Incident melding
-                    </p>
+                    <p className="text-red-600 text-xs uppercase tracking-widest font-medium">Incident melding</p>
+                    {activeInject.targetRole && (
+                        <span className="ml-auto bg-blue-100 text-blue-700 text-xs font-mono px-2 py-0.5 rounded-full">
+                            → {activeInject.targetRole}
+                        </span>
+                    )}
                 </div>
                 <h2 className="text-gray-900 text-xl font-bold mb-3">{activeInject.title}</h2>
                 <p className="text-gray-600 text-sm leading-relaxed">{activeInject.content}</p>

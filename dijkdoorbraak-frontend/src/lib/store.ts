@@ -12,6 +12,7 @@ export interface Role {
     name: string;
     shortName: string;
     description: string;
+    briefing: string | null;
     abilities: Ability[];
 }
 

@@ -8,7 +8,7 @@ export class PlayerService {
 
   async joinSession(joinCode: string, nickname: string) {
     const session = await this.prisma.db.session.findUnique({
-      where: { joinCode },
+      where: { joinCode: joinCode.toUpperCase() },
     });
 
     if (!session) {

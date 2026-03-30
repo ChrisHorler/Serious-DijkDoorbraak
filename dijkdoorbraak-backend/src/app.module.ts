@@ -8,6 +8,7 @@ import { ScenarioEngineModule } from "./scenario-engine/scenario-engine.module";
 import { RoleModule } from './role/role.module';
 import { DecisionModule } from './decision/decision.module';
 import { AuthModule } from './auth/auth.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AuthModule } from './auth/auth.module';
     RoleModule,
     DecisionModule,
     AuthModule,
+    FeedbackModule,
   ],
 })
 export class AppModule {}

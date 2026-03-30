@@ -25,6 +25,7 @@ interface Role {
     name: string;
     shortName: string;
     description: string;
+    briefing: string | null;
     abilities: Ability[];
 }
 
@@ -129,7 +130,7 @@ export default function EditorPage() {
     // ── Roles ──────────────────────────────────────────────────────
     const [roles, setRoles] = useState<Role[]>([]);
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-    const [roleForm, setRoleForm] = useState({ name: '', shortName: '', description: '' });
+    const [roleForm, setRoleForm] = useState({ name: '', shortName: '', description: '', briefing: '' });
     const [editingRole, setEditingRole] = useState<string | null>(null);
     const [savingRole, setSavingRole] = useState(false);
 
@@ -401,8 +402,8 @@ export default function EditorPage() {
         await loadRoles();
     }
 
-    function startEditRole(r: Role) { setEditingRole(r.id); setRoleForm({ name: r.name, shortName: r.shortName, description: r.description }); }
-    function cancelRoleEdit() { setEditingRole(null); setRoleForm({ name: '', shortName: '', description: '' }); }
+    function startEditRole(r: Role) { setEditingRole(r.id); setRoleForm({ name: r.name, shortName: r.shortName, description: r.description, briefing: r.briefing ?? '' }); }
+    function cancelRoleEdit() { setEditingRole(null); setRoleForm({ name: '', shortName: '', description: '', briefing: '' }); }
 
     // ── Ability helpers ────────────────────────────────────────────
 
@@ -820,7 +821,7 @@ export default function EditorPage() {
                     <div className="w-56 shrink-0 border-r border-gray-200 flex flex-col bg-white">
                         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                             <span className="text-xs uppercase tracking-widest text-gray-500">Rollen</span>
-                            <button onClick={() => { setEditingRole('new'); setRoleForm({ name: '', shortName: '', description: '' }); setSelectedRole(null); }}
+                            <button onClick={() => { setEditingRole('new'); setRoleForm({ name: '', shortName: '', description: '', briefing: '' }); setSelectedRole(null); }}
                                 className="text-blue-600 hover:text-blue-700 text-xs font-medium transition">+ Nieuw</button>
                         </div>
                         <div className="flex-1 overflow-y-auto">
@@ -844,8 +845,13 @@ export default function EditorPage() {
                                     <input value={roleForm.shortName} onChange={e => setRoleForm({ ...roleForm, shortName: e.target.value.toUpperCase() })} placeholder="Afkorting"
                                         className="bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 font-mono placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                                 </div>
-                                <textarea value={roleForm.description} onChange={e => setRoleForm({ ...roleForm, description: e.target.value })} placeholder="Beschrijving van de rol..." rows={3}
+                                <textarea value={roleForm.description} onChange={e => setRoleForm({ ...roleForm, description: e.target.value })} placeholder="Korte beschrijving van de rol..." rows={2}
                                     className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none" />
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-600 block mb-1.5">Roltoelichting <span className="text-gray-400 font-normal">(uitgebreide instructies voor de speler)</span></label>
+                                    <textarea value={roleForm.briefing} onChange={e => setRoleForm({ ...roleForm, briefing: e.target.value })} placeholder={"Beschrijf de verantwoordelijkheden, bevoegdheden en context van deze rol.\n\nDit zien spelers in hun rolkaart tijdens het scenario."} rows={7}
+                                        className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none text-sm" />
+                                </div>
                                 <div className="flex gap-3">
                                     <button onClick={saveRole} disabled={!roleForm.name.trim() || !roleForm.shortName.trim() || savingRole}
                                         className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">
@@ -872,6 +878,12 @@ export default function EditorPage() {
                                         </div>
                                         <button onClick={() => startEditRole(selectedRole)} className="text-gray-500 hover:text-gray-900 text-sm transition shrink-0">Bewerken</button>
                                     </div>
+                                    {selectedRole.briefing && (
+                                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mt-3">
+                                            <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-2">Roltoelichting</p>
+                                            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{selectedRole.briefing}</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="max-w-2xl space-y-4">

@@ -39,6 +39,7 @@ model Session {
   joinCode   String        @unique
   players    Player[]
   decisions  Decision[]
+  feedbacks  Feedback[]
   createdAt  DateTime      @default(now())
   startedAt  DateTime?
   endedAt    DateTime?
@@ -67,10 +68,24 @@ model Decision {
   ability       Ability? @relation(fields: [abilityId], references: [id])
   abilityId     String?
   customAction  String?
+  actionLat     Float?
+  actionLng     Float?
+  actionDetail  String?
+  actionUrgency String?
   adminResponse String?
   adminApproved Boolean?
   score         Int?
   timestamp     DateTime @default(now())
+}
+
+model Feedback {
+  id          String   @id @default(uuid())
+  session     Session  @relation(fields: [sessionId], references: [id])
+  sessionId   String
+  nickname    String
+  rating      Int
+  comment     String?
+  submittedAt DateTime @default(now())
 }
 
 model Role {
@@ -78,6 +93,7 @@ model Role {
   name        String    @unique
   shortName   String    @unique
   description String
+  briefing    String?
   abilities   Ability[]
   players     Player[]
   createdAt   DateTime  @default(now())

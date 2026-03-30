@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import { PlayerService } from "./player/player.service";
 import { SessionService } from "./session/session.service";
 import { DecisionService } from "./decision/decision.service";
+import { FeedbackService } from "./feedback/feedback.service";
 import { InjectService } from "./inject/inject.service";
 import { SessionStatus } from ".prisma/client";
 import { ScenarioEngineService } from "./scenario-engine/scenario-engine.service";
@@ -39,6 +40,7 @@ async function bootstrap() {
     console.log(`Cleaned up ${cleaned.count} stale RUNNING session(s) on startup`);
   }
   const decisionService = app.get(DecisionService);
+  const feedbackService = app.get(FeedbackService);
   const injectService = app.get(InjectService);
 
   io.use((socket, next) => {
@@ -113,12 +115,31 @@ async function bootstrap() {
           injectId: data.injectId,
           abilityId: data.abilityId,
           customAction: data.customAction,
+          actionLat: data.actionLat,
+          actionLng: data.actionLng,
+          actionDetail: data.actionDetail,
+          actionUrgency: data.actionUrgency,
         });
 
         // Notify everyone in session — admin sees all actions in real time
         io.to(data.sessionId).emit("action_submitted", { decision });
 
         if (callback) callback({ success: true, decision });
+      } catch (error) {
+        if (callback) callback({ success: false, message: error.message });
+      }
+    });
+
+    socket.on("submit_feedback", async (data, callback) => {
+      try {
+        const feedback = await feedbackService.submitFeedback(
+          data.sessionId,
+          data.nickname,
+          data.rating,
+          data.comment,
+        );
+        io.to(data.sessionId).emit("feedback_received", { feedback });
+        if (callback) callback({ success: true });
       } catch (error) {
         if (callback) callback({ success: false, message: error.message });
       }
@@ -149,7 +170,7 @@ async function bootstrap() {
       const { sessionId, playerId } = data;
       socket.join(sessionId);
       socket.data.playerId = playerId;
-      socket.data.sessionid = sessionId;
+      socket.data.sessionId = sessionId;
       try {
         await playerService.updateSocketId(playerId, socket.id);
         console.log(`Player ${playerId} rejoined room ${sessionId}`);

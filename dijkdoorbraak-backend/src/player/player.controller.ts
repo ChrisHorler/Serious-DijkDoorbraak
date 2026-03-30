@@ -19,7 +19,7 @@ export class PlayerController {
   }
 
   @Get("session/:sessionId")
-  findBySession(@Param("sessionid") sessionId: string) {
+  findBySession(@Param("sessionId") sessionId: string) {
     return this.playerService.getPlayerInSession(sessionId);
   }
 

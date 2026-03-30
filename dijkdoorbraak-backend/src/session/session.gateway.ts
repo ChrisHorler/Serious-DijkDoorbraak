@@ -85,6 +85,11 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
   ) {
     try {
       const session = await this.sessionService.getSessionByJoinCode(data.joinCode.toUpperCase());
+
+      if (session.status === SessionStatus.ENDED) {
+        return { success: false, message: 'Dit scenario is al afgelopen.' };
+      }
+
       const players = await this.playerService.getPlayerInSession(session.id);
 
       client.join(session.id);

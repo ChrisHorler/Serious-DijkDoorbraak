@@ -11,6 +11,10 @@ export class DecisionService {
         injectId?: string;
         abilityId?: string;
         customAction?: string;
+        actionLat?: number;
+        actionLng?: number;
+        actionDetail?: string;
+        actionUrgency?: string;
     }) {
         const player = await this.prisma.db.player.findUnique({
             where: { id: data.playerId },
@@ -25,6 +29,10 @@ export class DecisionService {
                 injectId: data.injectId,
                 abilityId: data.abilityId,
                 customAction: data.customAction,
+                actionLat: data.actionLat,
+                actionLng: data.actionLng,
+                actionDetail: data.actionDetail,
+                actionUrgency: data.actionUrgency,
             },
             include: {
                 ability: true,

@@ -10,11 +10,24 @@ export interface Decision {
     abilityId: string | null;
     ability?: { id: string; name: string; description: string | null } | null;
     customAction: string | null;
+    actionLat: number | null;
+    actionLng: number | null;
+    actionDetail: string | null;
+    actionUrgency: string | null;
     adminResponse: string | null;
     adminApproved: boolean | null;
     score: number | null;
     timestamp: string;
     player?: Player;
+}
+
+export interface FeedbackItem {
+    id: string;
+    sessionId: string;
+    nickname: string;
+    rating: number;
+    comment: string | null;
+    submittedAt: string;
 }
 
 export interface EscalationPhase {
@@ -133,6 +146,7 @@ export const useAdminStore = create<AdminStore>()(
                 token: null,
                 session: null,
                 players: [],
+                roles: [],
                 decisions: [],
                 injects: [],
                 overlays: [],

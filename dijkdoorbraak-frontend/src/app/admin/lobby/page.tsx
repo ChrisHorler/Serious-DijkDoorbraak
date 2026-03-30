@@ -130,6 +130,15 @@ export default function AdminLobbyPage() {
     }
 
     function assignRole(playerId: string, roleId: string) {
+        if (roleId) {
+            const alreadyAssigned = players.find((p) => p.id !== playerId && p.roleId === roleId);
+            if (alreadyAssigned) {
+                const role = roles.find((r: Role) => r.id === roleId);
+                if (!window.confirm(`"${role?.shortName ?? 'Deze rol'}" is al toegewezen aan ${alreadyAssigned.nickname}. Toch ook toewijzen?`)) {
+                    return;
+                }
+            }
+        }
         const socket = getSocket();
         socket.emit('assign_role', { playerId, roleId }, (ack: any) => {
             if (ack.success) updatePlayer(ack.player);

@@ -42,11 +42,11 @@ export class RoleService {
         return role.abilities;
     }
 
-    async createRole(data: { name: string; shortName: string; description?: string }) {
+    async createRole(data: { name: string; shortName: string; description?: string; briefing?: string }) {
         return this.prisma.db.role.create({ data: { ...data, description: data.description ?? '' }, include: { abilities: true } });
     }
 
-    async updateRole(id: string, data: { name?: string; shortName?: string; description?: string }) {
+    async updateRole(id: string, data: { name?: string; shortName?: string; description?: string; briefing?: string }) {
         return this.prisma.db.role.update({ where: { id }, data, include: { abilities: true } });
     }
 
