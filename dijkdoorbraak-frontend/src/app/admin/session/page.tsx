@@ -104,15 +104,14 @@ export default function AdminSessionPage() {
     function handleNextPhase() {
         if (!session || currentPhaseIndex >= phases.length - 1) return;
         const nextIndex = currentPhaseIndex + 1;
-        const phase = phases[nextIndex];
         const socket = getSocket();
-        const phaseOverlays = getPhaseOverlays(phase, incidentLocation ?? undefined, scenarioCustomOverlays);
+        const phaseOverlays = getPhaseOverlays(phases, nextIndex, incidentLocation ?? undefined, scenarioCustomOverlays);
 
         socket.emit('set_overlays', { sessionId: session.id, overlays: phaseOverlays }, () => {});
         setOverlays(phaseOverlays);
 
-        if (phase.injectId) {
-            socket.emit('fire_inject', { sessionId: session.id, injectId: phase.injectId }, () => {});
+        if (phases[nextIndex].injectId) {
+            socket.emit('fire_inject', { sessionId: session.id, injectId: phases[nextIndex].injectId }, () => {});
         }
 
         setCurrentPhaseIndex(nextIndex);
