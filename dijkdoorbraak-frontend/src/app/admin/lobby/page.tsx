@@ -6,7 +6,7 @@ import { useAdminStore, EscalationPhase } from '@/lib/adminStore';
 import { connectAdminSocket, getSocket } from '@/lib/socket';
 import { Role } from '@/lib/store';
 import { QRCodeSVG } from 'qrcode.react';
-import { STATIC_OVERLAYS, FLOOD_SIZES } from '@/lib/overlayPresets';
+import { FLOOD_SIZES } from '@/lib/overlayPresets';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
@@ -167,44 +167,6 @@ export default function AdminLobbyPage() {
         setPhases(phases.map(p => p.id === id ? { ...p, ...patch } : p));
     }
 
-    // Overlay schedule helpers — "which phase triggers this overlay/flood size?"
-    function getOverlayPhaseIndex(overlayId: string): number {
-        return phases.findIndex(p => p.activeOverlayIds.includes(overlayId));
-    }
-
-    function getFloodPhaseIndex(scale: number): number {
-        return phases.findIndex(p => p.floodZoneScale === scale);
-    }
-
-    function assignOverlayToPhase(overlayId: string, phaseIndex: number) {
-        setPhases(phases.map((p, i) => ({
-            ...p,
-            activeOverlayIds: i === phaseIndex
-                ? [...new Set([...p.activeOverlayIds, overlayId])]
-                : p.activeOverlayIds.filter(id => id !== overlayId),
-        })));
-    }
-
-    function assignFloodToPhase(scale: number, phaseIndex: number) {
-        setPhases(phases.map((p, i) => ({
-            ...p,
-            floodZoneScale: i === phaseIndex ? scale : (p.floodZoneScale === scale ? null : p.floodZoneScale),
-        })));
-    }
-
-    function clearOverlay(overlayId: string) {
-        setPhases(phases.map(p => ({
-            ...p,
-            activeOverlayIds: p.activeOverlayIds.filter(id => id !== overlayId),
-        })));
-    }
-
-    function clearFlood(scale: number) {
-        setPhases(phases.map(p => ({
-            ...p,
-            floodZoneScale: p.floodZoneScale === scale ? null : p.floodZoneScale,
-        })));
-    }
 
     return (
         <main className="min-h-screen bg-gray-50 text-gray-900">
@@ -374,106 +336,58 @@ export default function AdminLobbyPage() {
                                 Nog geen fasen ingesteld. Voeg een fase toe om te beginnen.
                             </div>
                         ) : (
-                            <>
-                                {/* Phase list — name + inject only */}
-                                <div className="divide-y divide-gray-100">
-                                    {phases.map((phase, index) => (
-                                        <div key={phase.id} className="px-6 py-4 flex items-center gap-3">
-                                            <span className="text-gray-400 text-xs font-mono w-6 shrink-0">{index + 1}</span>
-                                            <input
-                                                value={phase.name}
-                                                onChange={(e) => updatePhase(phase.id, { name: e.target.value })}
-                                                className="w-40 bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-gray-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                                placeholder="Naam fase"
-                                            />
-                                            <select
-                                                value={phase.injectId ?? ''}
-                                                onChange={(e) => updatePhase(phase.id, { injectId: e.target.value || null })}
-                                                className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                            >
-                                                <option value="">Geen inject</option>
-                                                {injects.map((inject) => (
-                                                    <option key={inject.id} value={inject.id}>
-                                                        {inject.title}{inject.targetRole ? ` (${inject.targetRole})` : ''}
-                                                    </option>
-                                                ))}
-                                            </select>
+                            <div className="divide-y divide-gray-100">
+                                {phases.map((phase, index) => (
+                                    <div key={phase.id} className="px-6 py-4 flex items-center gap-3">
+                                        <span className="text-gray-400 text-xs font-mono w-6 shrink-0">{index + 1}</span>
+                                        <input
+                                            value={phase.name}
+                                            onChange={(e) => updatePhase(phase.id, { name: e.target.value })}
+                                            className="w-44 bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-gray-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            placeholder="Naam fase"
+                                        />
+                                        {/* Flood zone for this phase */}
+                                        <div className="flex gap-1.5">
                                             <button
-                                                onClick={() => removePhase(phase.id)}
-                                                className="text-gray-400 hover:text-red-500 text-sm transition px-2 shrink-0"
+                                                onClick={() => updatePhase(phase.id, { floodZoneScale: null })}
+                                                className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${phase.floodZoneScale === null ? 'bg-gray-200 border-gray-400 text-gray-700' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-700'}`}
                                             >
-                                                Verwijder
+                                                Geen overstroming
                                             </button>
+                                            {FLOOD_SIZES.map(({ label, value }) => {
+                                                const active = phase.floodZoneScale === value;
+                                                const activeClass = value === 0.5 ? 'bg-blue-400 border-blue-400 text-white' : value === 1.0 ? 'bg-blue-600 border-blue-600 text-white' : 'bg-blue-800 border-blue-800 text-white';
+                                                return (
+                                                    <button key={value}
+                                                        onClick={() => updatePhase(phase.id, { floodZoneScale: value })}
+                                                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition flex items-center gap-1 ${active ? activeClass : 'bg-white border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-600'}`}
+                                                    >
+                                                        🌊 {label}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
-                                    ))}
-                                </div>
-
-                                {/* Overlay schedule — each layer assigned to a phase */}
-                                <div className="px-6 py-5 border-t border-gray-100 space-y-4">
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-700">Kaartlagen</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">Kaartlagen verschijnen cumulatief — alles t/m de actieve fase is zichtbaar.</p>
+                                        <select
+                                            value={phase.injectId ?? ''}
+                                            onChange={(e) => updatePhase(phase.id, { injectId: e.target.value || null })}
+                                            className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                        >
+                                            <option value="">Geen inject</option>
+                                            {injects.map((inject) => (
+                                                <option key={inject.id} value={inject.id}>
+                                                    {inject.title}{inject.targetRole ? ` (${inject.targetRole})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            onClick={() => removePhase(phase.id)}
+                                            className="text-gray-400 hover:text-red-500 text-sm transition px-2 shrink-0"
+                                        >
+                                            Verwijder
+                                        </button>
                                     </div>
-
-                                    {/* Static overlays */}
-                                    <div className="space-y-2">
-                                        {STATIC_OVERLAYS.map((overlay) => {
-                                            const assignedIndex = getOverlayPhaseIndex(overlay.id);
-                                            return (
-                                                <div key={overlay.id} className="flex items-center gap-3">
-                                                    <span
-                                                        className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-                                                        style={{ backgroundColor: overlay.color }}
-                                                    />
-                                                    <span className="text-sm text-gray-700 w-40 shrink-0">{overlay.label}</span>
-                                                    <select
-                                                        value={assignedIndex === -1 ? '' : String(assignedIndex)}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            if (val === '') clearOverlay(overlay.id);
-                                                            else assignOverlayToPhase(overlay.id, Number(val));
-                                                        }}
-                                                        className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                                    >
-                                                        <option value="">Niet actief</option>
-                                                        {phases.map((p, i) => (
-                                                            <option key={p.id} value={String(i)}>Verschijnt in {p.name}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {/* Flood zone sizes */}
-                                    <div className="space-y-2 pt-2 border-t border-gray-100">
-                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-widest">Overstromingsgebied</p>
-                                        {FLOOD_SIZES.map(({ label, value }) => {
-                                            const assignedIndex = getFloodPhaseIndex(value);
-                                            return (
-                                                <div key={value} className="flex items-center gap-3">
-                                                    <span className="text-base shrink-0">🌊</span>
-                                                    <span className="text-sm text-gray-700 w-40 shrink-0">{label}</span>
-                                                    <select
-                                                        value={assignedIndex === -1 ? '' : String(assignedIndex)}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            if (val === '') clearFlood(value);
-                                                            else assignFloodToPhase(value, Number(val));
-                                                        }}
-                                                        className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                                    >
-                                                        <option value="">Niet actief</option>
-                                                        {phases.map((p, i) => (
-                                                            <option key={p.id} value={String(i)}>Verschijnt in {p.name}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </>
+                                ))}
+                            </div>
                         )}
                     </div>
                 )}

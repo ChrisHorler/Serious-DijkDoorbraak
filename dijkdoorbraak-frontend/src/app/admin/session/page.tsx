@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { useAdminStore, Decision, FeedbackItem } from '@/lib/adminStore';
 import { connectAdminSocket, getSocket } from '@/lib/socket';
 import { Inject } from '@/lib/store';
-import { getPhaseOverlays } from '@/lib/overlayPresets';
+import { getPhaseFloodOverlay } from '@/lib/overlayPresets';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
@@ -105,10 +105,16 @@ export default function AdminSessionPage() {
         if (!session || currentPhaseIndex >= phases.length - 1) return;
         const nextIndex = currentPhaseIndex + 1;
         const socket = getSocket();
-        const phaseOverlays = getPhaseOverlays(phases, nextIndex, incidentLocation ?? undefined, scenarioCustomOverlays);
 
-        socket.emit('set_overlays', { sessionId: session.id, overlays: phaseOverlays }, () => {});
-        setOverlays(phaseOverlays);
+        // Only the flood zone is phase-driven. Preserve all live admin-placed overlays.
+        const newFlood = getPhaseFloodOverlay(phases, nextIndex, incidentLocation ?? undefined);
+        const merged = [
+            ...overlays.filter(o => o.id !== 'flood_zone'),
+            ...(newFlood ? [newFlood] : []),
+        ];
+
+        socket.emit('set_overlays', { sessionId: session.id, overlays: merged }, () => {});
+        setOverlays(merged);
 
         if (phases[nextIndex].injectId) {
             socket.emit('fire_inject', { sessionId: session.id, injectId: phases[nextIndex].injectId }, () => {});

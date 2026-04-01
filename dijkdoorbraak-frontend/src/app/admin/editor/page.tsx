@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useAdminStore, EscalationPhase } from '@/lib/adminStore';
-import { INCIDENT_LOCATION, STATIC_OVERLAYS, FLOOD_SIZES } from '@/lib/overlayPresets';
+import { INCIDENT_LOCATION, FLOOD_SIZES } from '@/lib/overlayPresets';
 import type { MapOverlay } from '@/lib/store';
 import type { DrawMode } from '@/components/admin/EditorMap';
 
@@ -255,41 +255,6 @@ export default function EditorPage() {
     function removePhase(id: string) { setPhases(p => p.filter(x => x.id !== id)); setPreviewPhaseIndex(-1); setPhasesSaved(false); }
     function updatePhase(id: string, patch: Partial<EscalationPhase>) { setPhases(p => p.map(x => x.id === id ? { ...x, ...patch } : x)); setPhasesSaved(false); }
 
-    function getOverlayPhaseIndex(overlayId: string): number {
-        return phases.findIndex(p => p.activeOverlayIds.includes(overlayId));
-    }
-
-    function getFloodPhaseIndex(scale: number): number {
-        return phases.findIndex(p => p.floodZoneScale === scale);
-    }
-
-    function assignOverlayToPhase(overlayId: string, phaseIndex: number) {
-        setPhases(p => p.map((x, i) => ({
-            ...x,
-            activeOverlayIds: i === phaseIndex
-                ? [...new Set([...x.activeOverlayIds, overlayId])]
-                : x.activeOverlayIds.filter(id => id !== overlayId),
-        })));
-        setPhasesSaved(false);
-    }
-
-    function assignFloodToPhase(scale: number, phaseIndex: number) {
-        setPhases(p => p.map((x, i) => ({
-            ...x,
-            floodZoneScale: i === phaseIndex ? scale : (x.floodZoneScale === scale ? null : x.floodZoneScale),
-        })));
-        setPhasesSaved(false);
-    }
-
-    function clearOverlay(overlayId: string) {
-        setPhases(p => p.map(x => ({ ...x, activeOverlayIds: x.activeOverlayIds.filter(id => id !== overlayId) })));
-        setPhasesSaved(false);
-    }
-
-    function clearFlood(scale: number) {
-        setPhases(p => p.map(x => ({ ...x, floodZoneScale: x.floodZoneScale === scale ? null : x.floodZoneScale })));
-        setPhasesSaved(false);
-    }
 
     async function savePhases() {
         if (!selectedScenario) return;
@@ -635,7 +600,6 @@ export default function EditorPage() {
                                             <p className="text-gray-400 text-xs py-3 text-center border border-dashed border-gray-200 rounded-xl">Nog geen fasen.</p>
                                         )}
 
-                                        {/* Phase list — name + inject per phase */}
                                         <div className="space-y-2">
                                             {phases.map((phase, index) => (
                                                 <div key={phase.id}
@@ -650,6 +614,24 @@ export default function EditorPage() {
                                                         </button>
                                                         <button onClick={() => removePhase(phase.id)} className="text-gray-400 hover:text-red-500 text-xs px-1 transition">✕</button>
                                                     </div>
+                                                    {/* Flood zone */}
+                                                    <div className="flex items-center gap-1.5 pl-6 flex-wrap">
+                                                        <button onClick={() => updatePhase(phase.id, { floodZoneScale: null })}
+                                                            className={`px-2 py-0.5 rounded text-xs font-semibold border transition ${phase.floodZoneScale === null ? 'bg-gray-200 border-gray-400 text-gray-700' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-700'}`}>
+                                                            Geen overstroming
+                                                        </button>
+                                                        {FLOOD_SIZES.map(({ label, value }) => {
+                                                            const active = phase.floodZoneScale === value;
+                                                            const activeClass = value === 0.5 ? 'bg-blue-400 border-blue-400 text-white' : value === 1.0 ? 'bg-blue-600 border-blue-600 text-white' : 'bg-blue-800 border-blue-800 text-white';
+                                                            return (
+                                                                <button key={value} onClick={() => updatePhase(phase.id, { floodZoneScale: value })}
+                                                                    className={`px-2 py-0.5 rounded text-xs font-semibold border transition flex items-center gap-1 ${active ? activeClass : 'bg-white border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-600'}`}>
+                                                                    🌊 {label}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    {/* Inject */}
                                                     <div className="flex items-center gap-2 pl-6">
                                                         <span className="text-gray-500 text-xs w-16 shrink-0">Inject</span>
                                                         <select value={phase.injectId ?? ''} onChange={e => updatePhase(phase.id, { injectId: e.target.value || null })}
@@ -663,62 +645,6 @@ export default function EditorPage() {
                                                 </div>
                                             ))}
                                         </div>
-
-                                        {/* Overlay schedule — global assignment */}
-                                        {phases.length > 0 && (
-                                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-3 mt-1">
-                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Kaartlagen</p>
-                                                <div className="space-y-1.5">
-                                                    {[...STATIC_OVERLAYS, ...customOverlays].map(overlay => {
-                                                        const assignedIndex = getOverlayPhaseIndex(overlay.id);
-                                                        return (
-                                                            <div key={overlay.id} className="flex items-center gap-2">
-                                                                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: overlay.color }} />
-                                                                <span className="text-xs text-gray-700 w-28 shrink-0 truncate">{overlay.label}</span>
-                                                                <select
-                                                                    value={assignedIndex === -1 ? '' : String(assignedIndex)}
-                                                                    onChange={e => {
-                                                                        const val = e.target.value;
-                                                                        if (val === '') clearOverlay(overlay.id);
-                                                                        else assignOverlayToPhase(overlay.id, Number(val));
-                                                                    }}
-                                                                    className="flex-1 bg-white border border-gray-300 rounded-lg px-2 py-1 text-xs text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                                                    <option value="">Niet actief</option>
-                                                                    {phases.map((p, i) => (
-                                                                        <option key={p.id} value={String(i)}>Fase {i + 1}: {p.name}</option>
-                                                                    ))}
-                                                                </select>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                                <div className="space-y-1.5 pt-2 border-t border-gray-200">
-                                                    <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">Overstroming</p>
-                                                    {FLOOD_SIZES.map(({ label, value }) => {
-                                                        const assignedIndex = getFloodPhaseIndex(value);
-                                                        return (
-                                                            <div key={value} className="flex items-center gap-2">
-                                                                <span className="text-sm shrink-0">🌊</span>
-                                                                <span className="text-xs text-gray-700 w-28 shrink-0">{label}</span>
-                                                                <select
-                                                                    value={assignedIndex === -1 ? '' : String(assignedIndex)}
-                                                                    onChange={e => {
-                                                                        const val = e.target.value;
-                                                                        if (val === '') clearFlood(value);
-                                                                        else assignFloodToPhase(value, Number(val));
-                                                                    }}
-                                                                    className="flex-1 bg-white border border-gray-300 rounded-lg px-2 py-1 text-xs text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                                                    <option value="">Niet actief</option>
-                                                                    {phases.map((p, i) => (
-                                                                        <option key={p.id} value={String(i)}>Fase {i + 1}: {p.name}</option>
-                                                                    ))}
-                                                                </select>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )}
 
                                         {phases.length > 0 && (
                                             <button onClick={savePhases} disabled={savingPhases}

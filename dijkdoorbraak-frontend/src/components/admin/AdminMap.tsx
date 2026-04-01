@@ -5,7 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { MapOverlay } from '@/lib/store';
 import { getSocket } from '@/lib/socket';
-import { INCIDENT_LOCATION, STATIC_OVERLAYS, makeFloodZone } from '@/lib/overlayPresets';
+import { INCIDENT_LOCATION, STATIC_OVERLAYS } from '@/lib/overlayPresets';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -24,7 +24,7 @@ interface AdminMapProps {
 
 export default function AdminMap({ sessionId, overlays, onToggleOverlay, center, customOverlays = [] }: AdminMapProps) {
     const mapCenter = center ?? INCIDENT_LOCATION;
-    const OVERLAY_PRESETS: MapOverlay[] = [makeFloodZone(1, mapCenter), ...STATIC_OVERLAYS, ...customOverlays];
+    const OVERLAY_PRESETS: MapOverlay[] = [...STATIC_OVERLAYS, ...customOverlays];
     const activeIds = new Set(overlays.map((o) => o.id));
 
     function handleToggle(preset: MapOverlay) {

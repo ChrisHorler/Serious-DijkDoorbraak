@@ -61,29 +61,13 @@ export const STATIC_OVERLAYS: MapOverlay[] = [
 ];
 
 /**
- * Computes the cumulative map overlays for all phases up to and including upToIndex.
- * - Flood zone: uses the most recent non-null scale seen across phases 0..upToIndex.
- * - Static/custom overlays: union of all activeOverlayIds from phases 0..upToIndex.
+ * Returns the flood zone overlay for phases 0..upToIndex (most recent non-null scale).
+ * Static/custom overlays are managed live by the admin during the session, not by phases.
  */
-export function getPhaseOverlays(phases: EscalationPhase[], upToIndex: number, center?: [number, number], extraOverlays?: MapOverlay[]): MapOverlay[] {
-    const overlays: MapOverlay[] = [];
-
-    let latestFloodScale: number | null = null;
+export function getPhaseFloodOverlay(phases: EscalationPhase[], upToIndex: number, center?: [number, number]): MapOverlay | null {
+    let latestScale: number | null = null;
     for (let i = 0; i <= upToIndex; i++) {
-        if (phases[i].floodZoneScale !== null) latestFloodScale = phases[i].floodZoneScale;
+        if (phases[i].floodZoneScale !== null) latestScale = phases[i].floodZoneScale;
     }
-    if (latestFloodScale !== null) {
-        overlays.push(makeFloodZone(latestFloodScale, center));
-    }
-
-    const seenIds = new Set<string>();
-    for (let i = 0; i <= upToIndex; i++) {
-        for (const id of phases[i].activeOverlayIds) seenIds.add(id);
-    }
-    const allAvailable = [...STATIC_OVERLAYS, ...(extraOverlays ?? [])];
-    for (const id of seenIds) {
-        const overlay = allAvailable.find(o => o.id === id);
-        if (overlay) overlays.push(overlay);
-    }
-    return overlays;
+    return latestScale !== null ? makeFloodZone(latestScale, center) : null;
 }
