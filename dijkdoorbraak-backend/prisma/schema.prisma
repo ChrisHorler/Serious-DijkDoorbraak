@@ -22,7 +22,7 @@ model Scenario {
 
 model Inject {
   id          String     @id @default(uuid())
-  scenario    Scenario   @relation(fields: [scenarioId], references: [id])
+  scenario    Scenario   @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
   scenarioId  String
   title       String
   content     String
@@ -34,7 +34,7 @@ model Inject {
 
 model Session {
   id         String        @id @default(uuid())
-  scenario   Scenario      @relation(fields: [scenarioId], references: [id])
+  scenario   Scenario      @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
   scenarioId String
   status     SessionStatus @default(LOBBY)
   joinCode   String        @unique
@@ -48,7 +48,7 @@ model Session {
 
 model Player {
   id        String     @id @default(uuid())
-  session   Session    @relation(fields: [sessionId], references: [id])
+  session   Session    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId String
   nickname  String
   role      Role?      @relation(fields: [roleId], references: [id])
@@ -60,9 +60,9 @@ model Player {
 
 model Decision {
   id            String   @id @default(uuid())
-  player        Player   @relation(fields: [playerId], references: [id])
+  player        Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
   playerId      String
-  session       Session  @relation(fields: [sessionId], references: [id])
+  session       Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId     String
   inject        Inject?  @relation(fields: [injectId], references: [id])
   injectId      String?
@@ -81,7 +81,7 @@ model Decision {
 
 model Feedback {
   id              String   @id @default(uuid())
-  session         Session  @relation(fields: [sessionId], references: [id])
+  session         Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId       String
   nickname        String
   rating          Int?

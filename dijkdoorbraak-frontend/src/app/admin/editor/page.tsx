@@ -945,10 +945,15 @@ export default function EditorPage() {
                                         </div>
                                         <button onClick={() => startEditRole(selectedRole)} className="text-gray-500 hover:text-gray-900 text-sm transition shrink-0">Bewerken</button>
                                     </div>
-                                    {selectedRole.briefing && (
+                                    {selectedRole.briefing ? (
                                         <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mt-3">
                                             <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-2">Roltoelichting</p>
                                             <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{selectedRole.briefing}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="border border-dashed border-gray-200 rounded-xl p-4 mt-3 flex items-center justify-between gap-4">
+                                            <p className="text-gray-400 text-sm">Geen roltoelichting — spelers zien "geen informatie" in hun rolkaart.</p>
+                                            <button onClick={() => startEditRole(selectedRole)} className="text-blue-600 hover:text-blue-700 text-xs font-semibold transition shrink-0">+ Toevoegen</button>
                                         </div>
                                     )}
                                 </div>

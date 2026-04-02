@@ -5,7 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { EscalationPhase } from '@/lib/adminStore';
 import type { MapOverlay } from '@/lib/store';
-import { makeFloodZone, STATIC_OVERLAYS } from '@/lib/overlayPresets';
+import { makeFloodZone } from '@/lib/overlayPresets';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -98,8 +98,7 @@ export default function EditorMap({
         ? makeFloodZone(previewPhase.floodZoneScale, center)
         : null;
 
-    // All available static + custom overlays
-    const allOverlays: MapOverlay[] = [...STATIC_OVERLAYS, ...customOverlays];
+    const allOverlays: MapOverlay[] = customOverlays;
 
     return (
         <div className={`w-full h-full rounded-xl overflow-hidden ${drawMode !== 'none' ? '[&_.leaflet-container]:!cursor-crosshair' : ''}`}>
