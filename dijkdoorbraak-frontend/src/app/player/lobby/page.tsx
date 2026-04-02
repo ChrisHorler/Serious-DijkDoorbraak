@@ -9,7 +9,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:300
 
 export default function LobbyPage() {
   const router = useRouter();
-  const { player, session, lobbyPlayers, setLobbyPlayers, setPlayer } = useGameStore();
+  const { player, session, lobbyPlayers, setLobbyPlayers, setPlayer, setIncidentLocation, setFeedbackQuestions } = useGameStore();
   const hasJoined = useRef(false);
 
   useEffect(() => {
@@ -34,7 +34,13 @@ export default function LobbyPage() {
       }
     });
 
-    socket.on('scenario_started', () => {
+    socket.on('scenario_started', (data: { incidentLat?: number; incidentLng?: number; feedbackQuestions?: any[] }) => {
+      if (data?.incidentLat != null && data?.incidentLng != null) {
+        setIncidentLocation([data.incidentLat, data.incidentLng]);
+      }
+      if (data?.feedbackQuestions) {
+        setFeedbackQuestions(data.feedbackQuestions);
+      }
       router.push('/player/game');
     });
 

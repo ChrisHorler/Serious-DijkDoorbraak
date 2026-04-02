@@ -9,6 +9,7 @@ import { RoleModule } from './role/role.module';
 import { DecisionModule } from './decision/decision.module';
 import { AuthModule } from './auth/auth.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { FeedbackQuestionModule } from './feedback-question/feedback-question.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { FeedbackModule } from './feedback/feedback.module';
     DecisionModule,
     AuthModule,
     FeedbackModule,
+    FeedbackQuestionModule,
   ],
 })
 export class AppModule {}

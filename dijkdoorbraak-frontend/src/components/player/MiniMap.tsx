@@ -9,12 +9,13 @@ interface Props {
     overlays: MapOverlay[];
     selectedLocation: [number, number] | null;
     onLocationSelect: (lat: number, lng: number) => void;
+    defaultCenter?: [number, number];
 }
 
 // Default center: central Netherlands (Noord-Brabant/Zeeland area)
 const DEFAULT_CENTER: [number, number] = [51.6, 4.5];
 
-export default function MiniMap({ overlays, selectedLocation, onLocationSelect }: Props) {
+export default function MiniMap({ overlays, selectedLocation, onLocationSelect, defaultCenter }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<L.Map | null>(null);
     const markerRef = useRef<L.Marker | null>(null);
@@ -22,22 +23,26 @@ export default function MiniMap({ overlays, selectedLocation, onLocationSelect }
     useEffect(() => {
         if (!containerRef.current || mapRef.current) return;
 
-        // Compute center from overlays if available
+        // Priority: explicit defaultCenter (crisis zone) > overlay centroid > fallback
         let center: [number, number] = DEFAULT_CENTER;
-        const allCoords: [number, number][] = [];
-        for (const o of overlays) {
-            if (o.kind === 'marker') {
-                allCoords.push(o.coordinates as [number, number]);
-            } else {
-                for (const c of (o.coordinates as [number, number][])) {
-                    allCoords.push(c);
+        if (defaultCenter) {
+            center = defaultCenter;
+        } else {
+            const allCoords: [number, number][] = [];
+            for (const o of overlays) {
+                if (o.kind === 'marker') {
+                    allCoords.push(o.coordinates as [number, number]);
+                } else {
+                    for (const c of (o.coordinates as [number, number][])) {
+                        allCoords.push(c);
+                    }
                 }
             }
-        }
-        if (allCoords.length > 0) {
-            const avgLat = allCoords.reduce((s, c) => s + c[0], 0) / allCoords.length;
-            const avgLng = allCoords.reduce((s, c) => s + c[1], 0) / allCoords.length;
-            center = [avgLat, avgLng];
+            if (allCoords.length > 0) {
+                const avgLat = allCoords.reduce((s, c) => s + c[0], 0) / allCoords.length;
+                const avgLng = allCoords.reduce((s, c) => s + c[1], 0) / allCoords.length;
+                center = [avgLat, avgLng];
+            }
         }
 
         const map = L.map(containerRef.current, {

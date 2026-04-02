@@ -7,16 +7,17 @@ datasource db {
 }
 
 model Scenario {
-  id          String    @id @default(uuid())
-  title       String
-  description String?
-  phases         Json?
-  customOverlays Json?
-  incidentLat    Float?
-  incidentLng    Float?
-  Injects     Inject[]
-  sessions    Session[]
-  createdAt   DateTime  @default(now())
+  id                String             @id @default(uuid())
+  title             String
+  description       String?
+  phases            Json?
+  customOverlays    Json?
+  incidentLat       Float?
+  incidentLng       Float?
+  Injects           Inject[]
+  sessions          Session[]
+  feedbackQuestions FeedbackQuestion[]
+  createdAt         DateTime           @default(now())
 }
 
 model Inject {
@@ -79,13 +80,23 @@ model Decision {
 }
 
 model Feedback {
-  id          String   @id @default(uuid())
-  session     Session  @relation(fields: [sessionId], references: [id])
-  sessionId   String
-  nickname    String
-  rating      Int
-  comment     String?
-  submittedAt DateTime @default(now())
+  id              String   @id @default(uuid())
+  session         Session  @relation(fields: [sessionId], references: [id])
+  sessionId       String
+  nickname        String
+  rating          Int?
+  questionRatings Json?
+  comment         String?
+  submittedAt     DateTime @default(now())
+}
+
+model FeedbackQuestion {
+  id         String   @id @default(uuid())
+  scenario   Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  scenarioId String
+  question   String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
 }
 
 model Role {

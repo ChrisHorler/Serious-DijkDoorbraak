@@ -49,6 +49,12 @@ interface Scenario {
     Injects: Inject[];
 }
 
+interface FeedbackQuestion {
+    id: string;
+    question: string;
+    order: number;
+}
+
 interface DrawDraft {
     kind: 'polygon' | 'marker';
     coordinates: [number, number][] | [number, number];
@@ -108,6 +114,11 @@ export default function EditorPage() {
     const [savingPhases, setSavingPhases] = useState(false);
     const [phasesSaved, setPhasesSaved] = useState(false);
 
+    // ── Feedback questions ─────────────────────────────────────────
+    const [feedbackQuestions, setFeedbackQuestions] = useState<FeedbackQuestion[]>([]);
+    const [feedbackQuestionInput, setFeedbackQuestionInput] = useState('');
+    const [savingFeedbackQuestion, setSavingFeedbackQuestion] = useState(false);
+
     // ── Incident location ──────────────────────────────────────────
     const [incidentLat, setIncidentLat] = useState(INCIDENT_LOCATION[0]);
     const [incidentLng, setIncidentLng] = useState(INCIDENT_LOCATION[1]);
@@ -165,6 +176,9 @@ export default function EditorPage() {
         setDrawMode('none');
         setDrawPoints([]);
         setPendingDraft(null);
+        // Load feedback questions for this scenario
+        const fqRes = await fetch(`${BACKEND_URL}/scenarios/${id}/feedback-questions`);
+        setFeedbackQuestions(await fqRes.json());
         return s;
     }
 
@@ -267,6 +281,28 @@ export default function EditorPage() {
         setSavingPhases(false);
         setPhasesSaved(true);
         setTimeout(() => setPhasesSaved(false), 2000);
+    }
+
+    // ── Feedback question helpers ──────────────────────────────────
+
+    async function addFeedbackQuestion() {
+        if (!selectedScenario || !feedbackQuestionInput.trim()) return;
+        setSavingFeedbackQuestion(true);
+        const res = await fetch(`${BACKEND_URL}/scenarios/${selectedScenario.id}/feedback-questions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: feedbackQuestionInput.trim(), order: feedbackQuestions.length }),
+        });
+        const created: FeedbackQuestion = await res.json();
+        setFeedbackQuestions((prev) => [...prev, created]);
+        setFeedbackQuestionInput('');
+        setSavingFeedbackQuestion(false);
+    }
+
+    async function deleteFeedbackQuestion(id: string) {
+        if (!selectedScenario) return;
+        await fetch(`${BACKEND_URL}/scenarios/${selectedScenario.id}/feedback-questions/${id}`, { method: 'DELETE' });
+        setFeedbackQuestions((prev) => prev.filter((q) => q.id !== id));
     }
 
     // ── Location helpers ───────────────────────────────────────────
@@ -652,6 +688,45 @@ export default function EditorPage() {
                                                 {savingPhases ? 'Opslaan...' : 'Fasen opslaan'}
                                             </button>
                                         )}
+                                    </div>
+
+                                    {/* ── Feedback Questions ── */}
+                                    <div className="space-y-2">
+                                        <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-500">
+                                            Feedbackvragen ({feedbackQuestions.length})
+                                        </h3>
+                                        <p className="text-gray-400 text-xs">Spelers beoordelen elke vraag met sterren aan het einde van het scenario.</p>
+
+                                        {feedbackQuestions.length === 0 && (
+                                            <p className="text-gray-400 text-xs py-3 text-center border border-dashed border-gray-200 rounded-xl">Nog geen vragen — spelers zien alleen het commentaarveld.</p>
+                                        )}
+
+                                        <div className="space-y-1.5">
+                                            {feedbackQuestions.map((q, i) => (
+                                                <div key={q.id} className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 flex items-center gap-3">
+                                                    <span className="text-gray-400 text-xs font-mono shrink-0">{i + 1}</span>
+                                                    <p className="flex-1 text-sm text-gray-800">{q.question}</p>
+                                                    <button onClick={() => deleteFeedbackQuestion(q.id)} className="text-red-400 hover:text-red-600 text-xs transition shrink-0">✕</button>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            <input
+                                                value={feedbackQuestionInput}
+                                                onChange={(e) => setFeedbackQuestionInput(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && addFeedbackQuestion()}
+                                                placeholder="Nieuwe vraag..."
+                                                className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            />
+                                            <button
+                                                onClick={addFeedbackQuestion}
+                                                disabled={!feedbackQuestionInput.trim() || savingFeedbackQuestion}
+                                                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-lg px-3 py-2 text-xs transition"
+                                            >
+                                                + Vraag
+                                            </button>
+                                        </div>
                                     </div>
                                 </>
                             )}

@@ -21,11 +21,18 @@ export interface Decision {
     player?: Player;
 }
 
+export interface QuestionRating {
+    questionId: string;
+    question: string;
+    rating: number;
+}
+
 export interface FeedbackItem {
     id: string;
     sessionId: string;
     nickname: string;
-    rating: number;
+    rating: number | null;
+    questionRatings: QuestionRating[] | null;
     comment: string | null;
     submittedAt: string;
 }

@@ -14,15 +14,28 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
+export interface PendingActionPin {
+    id: string;
+    lat: number;
+    lng: number;
+    playerLabel: string;
+    actionLabel: string;
+    urgency: string | null;
+    detail: string | null;
+}
+
 interface AdminMapProps {
     sessionId: string;
     overlays: MapOverlay[];
     onToggleOverlay: (overlay: MapOverlay) => void;
     center?: [number, number];
     customOverlays?: MapOverlay[];
+    pendingPins?: PendingActionPin[];
+    onPublishPin?: (pin: PendingActionPin) => void;
+    onDismissPin?: (pinId: string) => void;
 }
 
-export default function AdminMap({ sessionId, overlays, onToggleOverlay, center, customOverlays = [] }: AdminMapProps) {
+export default function AdminMap({ sessionId, overlays, onToggleOverlay, center, customOverlays = [], pendingPins = [], onPublishPin, onDismissPin }: AdminMapProps) {
     const mapCenter = center ?? INCIDENT_LOCATION;
     const OVERLAY_PRESETS: MapOverlay[] = [...STATIC_OVERLAYS, ...customOverlays];
     const activeIds = new Set(overlays.map((o) => o.id));
@@ -51,6 +64,40 @@ export default function AdminMap({ sessionId, overlays, onToggleOverlay, center,
                     <Marker position={mapCenter}>
                         <Popup><strong>Incident locatie</strong><br />Dijkdoorbraak gedetecteerd</Popup>
                     </Marker>
+
+                    {pendingPins.map((pin) => {
+                        const orangeIcon = L.divIcon({
+                            className: '',
+                            html: `<div style="width:20px;height:20px;background:#f97316;border:3px solid white;border-radius:50%;box-shadow:0 0 0 3px rgba(249,115,22,0.4),0 2px 6px rgba(0,0,0,0.4);animation:pulse 1.5s infinite"></div>`,
+                            iconAnchor: [10, 10],
+                        });
+                        return (
+                            <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={orangeIcon}>
+                                <Popup>
+                                    <div style={{ minWidth: 180 }}>
+                                        <p style={{ fontWeight: 700, marginBottom: 2 }}>{pin.playerLabel}</p>
+                                        <p style={{ fontSize: 13, color: '#555', marginBottom: 4 }}>{pin.actionLabel}</p>
+                                        {pin.urgency && <p style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>Urgentie: {pin.urgency}</p>}
+                                        {pin.detail && <p style={{ fontSize: 12, color: '#888', fontStyle: 'italic', marginBottom: 6 }}>"{pin.detail}"</p>}
+                                        <div style={{ display: 'flex', gap: 6 }}>
+                                            <button
+                                                onClick={() => onPublishPin?.(pin)}
+                                                style={{ flex: 1, background: '#2563eb', color: 'white', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                                            >
+                                                Publiceer
+                                            </button>
+                                            <button
+                                                onClick={() => onDismissPin?.(pin.id)}
+                                                style={{ flex: 1, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: 12, cursor: 'pointer' }}
+                                            >
+                                                Negeer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        );
+                    })}
 
                     {overlays.map((overlay) => {
                         if (overlay.kind === 'polygon') {

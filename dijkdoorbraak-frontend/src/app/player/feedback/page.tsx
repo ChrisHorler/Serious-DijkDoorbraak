@@ -5,38 +5,68 @@ import { useRouter } from 'next/navigation';
 import { getSocket } from '@/lib/socket';
 import { useGameStore } from '@/lib/store';
 
+function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+    const [hovered, setHovered] = useState(0);
+    return (
+        <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                    key={star}
+                    onClick={() => onChange(star)}
+                    onMouseEnter={() => setHovered(star)}
+                    onMouseLeave={() => setHovered(0)}
+                    className="text-3xl transition-transform hover:scale-110 focus:outline-none"
+                >
+                    <span className={star <= (hovered || value) ? 'text-amber-400' : 'text-gray-200'}>★</span>
+                </button>
+            ))}
+        </div>
+    );
+}
+
 export default function FeedbackPage() {
     const router = useRouter();
-    const { player, session, reset } = useGameStore();
-    const [rating, setRating] = useState(0);
-    const [hovered, setHovered] = useState(0);
+    const { player, session, feedbackQuestions, reset } = useGameStore();
+    const [questionRatings, setQuestionRatings] = useState<Record<string, number>>({});
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
-    // If no session info (e.g. direct navigation), skip to join
     if (!session && !submitted) {
         if (typeof window !== 'undefined') router.replace('/player/join');
         return null;
     }
 
+    const allAnswered =
+        feedbackQuestions.length === 0 ||
+        feedbackQuestions.every((q) => (questionRatings[q.id] ?? 0) > 0);
+
     function submitFeedback() {
-        if (!session || rating === 0 || submitting) return;
+        if (!session || !allAnswered || submitting) return;
         setSubmitting(true);
         const socket = getSocket();
-        socket.emit('submit_feedback', {
-            sessionId: session.id,
-            nickname: player?.nickname ?? 'Anoniem',
-            rating,
-            comment: comment.trim() || null,
-        }, () => {
-            setSubmitted(true);
-            setSubmitting(false);
-            setTimeout(() => {
-                reset();
-                router.replace('/player/join');
-            }, 3000);
-        });
+        const builtRatings = feedbackQuestions.map((q) => ({
+            questionId: q.id,
+            question: q.question,
+            rating: questionRatings[q.id] ?? 0,
+        }));
+        socket.emit(
+            'submit_feedback',
+            {
+                sessionId: session.id,
+                nickname: player?.nickname ?? 'Anoniem',
+                questionRatings: builtRatings,
+                comment: comment.trim() || null,
+            },
+            () => {
+                setSubmitted(true);
+                setSubmitting(false);
+                setTimeout(() => {
+                    reset();
+                    router.replace('/player/join');
+                }, 3000);
+            },
+        );
     }
 
     function skip() {
@@ -45,7 +75,7 @@ export default function FeedbackPage() {
     }
 
     return (
-        <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+        <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-8">
             <div className="w-full max-w-md space-y-6">
 
                 {/* Header */}
@@ -68,35 +98,32 @@ export default function FeedbackPage() {
                 ) : (
                     <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
 
-                        {/* Star rating */}
-                        <div className="space-y-2">
-                            <p className="text-sm font-semibold text-gray-700">Hoe was je ervaring?</p>
-                            <div className="flex gap-2 justify-center">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <button
-                                        key={star}
-                                        onClick={() => setRating(star)}
-                                        onMouseEnter={() => setHovered(star)}
-                                        onMouseLeave={() => setHovered(0)}
-                                        className="text-4xl transition-transform hover:scale-110 focus:outline-none"
-                                    >
-                                        <span className={star <= (hovered || rating) ? 'text-amber-400' : 'text-gray-200'}>
-                                            ★
-                                        </span>
-                                    </button>
+                        {/* Per-question ratings */}
+                        {feedbackQuestions.length > 0 && (
+                            <div className="space-y-5">
+                                {feedbackQuestions.map((q, i) => (
+                                    <div key={q.id} className="space-y-2">
+                                        <p className="text-sm font-semibold text-gray-800">
+                                            <span className="text-gray-400 font-normal mr-1">{i + 1}.</span>
+                                            {q.question}
+                                        </p>
+                                        <StarPicker
+                                            value={questionRatings[q.id] ?? 0}
+                                            onChange={(v) =>
+                                                setQuestionRatings((prev) => ({ ...prev, [q.id]: v }))
+                                            }
+                                        />
+                                    </div>
                                 ))}
+                                <div className="border-t border-gray-100" />
                             </div>
-                            {rating > 0 && (
-                                <p className="text-center text-xs text-gray-400">
-                                    {['', 'Slecht', 'Matig', 'Goed', 'Heel goed', 'Uitstekend'][rating]}
-                                </p>
-                            )}
-                        </div>
+                        )}
 
-                        {/* Comment */}
+                        {/* General comment */}
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-gray-700">
-                                Opmerkingen <span className="text-gray-400 font-normal">(optioneel)</span>
+                                Algemene feedback{' '}
+                                <span className="text-gray-400 font-normal">(optioneel)</span>
                             </label>
                             <textarea
                                 value={comment}
@@ -112,7 +139,7 @@ export default function FeedbackPage() {
                         <div className="flex gap-3">
                             <button
                                 onClick={submitFeedback}
-                                disabled={rating === 0 || submitting}
+                                disabled={!allAnswered || submitting}
                                 className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl py-3 text-sm transition"
                             >
                                 {submitting ? 'Versturen...' : 'Feedback versturen'}
@@ -124,6 +151,12 @@ export default function FeedbackPage() {
                                 Overslaan
                             </button>
                         </div>
+
+                        {feedbackQuestions.length > 0 && !allAnswered && (
+                            <p className="text-center text-xs text-amber-600">
+                                Beantwoord alle vragen om door te gaan.
+                            </p>
+                        )}
                     </div>
                 )}
             </div>

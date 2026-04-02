@@ -27,7 +27,7 @@ const URGENCY_OPTIONS: { value: Urgency; label: string; color: string; active: s
 ];
 
 export default function ActionDetailModal({ abilityName, onSubmit, onCancel }: Props) {
-    const { overlays } = useGameStore();
+    const { overlays, incidentLocation } = useGameStore();
     const [urgency, setUrgency] = useState<Urgency>('medium');
     const [location, setLocation] = useState<[number, number] | null>(null);
     const [detail, setDetail] = useState('');
@@ -87,6 +87,7 @@ export default function ActionDetailModal({ abilityName, onSubmit, onCancel }: P
                                     overlays={overlays}
                                     selectedLocation={location}
                                     onLocationSelect={(lat, lng) => setLocation([lat, lng])}
+                                    defaultCenter={incidentLocation ?? undefined}
                                 />
                             </div>
                         )}

@@ -5,6 +5,7 @@ import { PlayerService } from "./player/player.service";
 import { SessionService } from "./session/session.service";
 import { DecisionService } from "./decision/decision.service";
 import { FeedbackService } from "./feedback/feedback.service";
+import { FeedbackQuestionService } from "./feedback-question/feedback-question.service";
 import { InjectService } from "./inject/inject.service";
 import { SessionStatus } from ".prisma/client";
 import { ScenarioEngineService } from "./scenario-engine/scenario-engine.service";
@@ -41,6 +42,7 @@ async function bootstrap() {
   }
   const decisionService = app.get(DecisionService);
   const feedbackService = app.get(FeedbackService);
+  const feedbackQuestionService = app.get(FeedbackQuestionService);
   const injectService = app.get(InjectService);
 
   io.use((socket, next) => {
@@ -98,7 +100,16 @@ async function bootstrap() {
         );
 
         await scenarioEngine.startScenario(session.id, session.scenarioId);
-        io.to(data.sessionId).emit("scenario_started", { session });
+
+        // Include incident location + feedback questions so players have full context
+        const scenario = await sessionService.getScenario(session.scenarioId) as any;
+        const feedbackQuestions = await feedbackQuestionService.getForScenario(session.scenarioId);
+        io.to(data.sessionId).emit("scenario_started", {
+          session,
+          incidentLat: scenario.incidentLat ?? null,
+          incidentLng: scenario.incidentLng ?? null,
+          feedbackQuestions,
+        });
 
         if (callback) callback({ success: true, session });
       } catch (error) {
@@ -135,8 +146,8 @@ async function bootstrap() {
         const feedback = await feedbackService.submitFeedback(
           data.sessionId,
           data.nickname,
-          data.rating,
           data.comment,
+          data.questionRatings,
         );
         io.to(data.sessionId).emit("feedback_received", { feedback });
         if (callback) callback({ success: true });

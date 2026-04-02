@@ -25,6 +25,12 @@ export interface Player {
     joinedAt: string;
 }
 
+export interface FeedbackQuestion {
+    id: string;
+    question: string;
+    order: number;
+}
+
 export interface Inject {
     id: string;
     title: string;
@@ -69,6 +75,14 @@ interface GameStore {
     addOverlay: (overlay: MapOverlay) => void;
     removeOverlay: (id: string) => void;
     setOverlays: (overlays: MapOverlay[]) => void;
+
+    // Incident location (set when scenario starts)
+    incidentLocation: [number, number] | null;
+    setIncidentLocation: (loc: [number, number] | null) => void;
+
+    // Feedback questions (set when scenario starts)
+    feedbackQuestions: FeedbackQuestion[];
+    setFeedbackQuestions: (questions: FeedbackQuestion[]) => void;
 
     // Reset
     reset: () => void;
@@ -118,6 +132,12 @@ export const useGameStore = create<GameStore>() (
                 set((state) => ({ overlays: state.overlays.filter((o) => o.id !== id) })),
             setOverlays: (overlays) => set({ overlays }),
 
+            incidentLocation: null,
+            setIncidentLocation: (loc) => set({ incidentLocation: loc }),
+
+            feedbackQuestions: [],
+            setFeedbackQuestions: (questions) => set({ feedbackQuestions: questions }),
+
             reset: () => set({
                 session: null,
                 player: null,
@@ -126,6 +146,8 @@ export const useGameStore = create<GameStore>() (
                 activeInject: null,
                 toasts: [],
                 overlays: [],
+                incidentLocation: null,
+                feedbackQuestions: [],
             }),
         }),
         {
