@@ -15,8 +15,9 @@ const GameMap = dynamic(() => import('@/components/player/GameMap'), { ssr: fals
 
 export default function GamePage() {
     const router = useRouter();
-    const { player, session, addInject, addToast, setActiveInject, addOverlay, setOverlays, overlays } = useGameStore();
+    const { player, session, addInject, addToast, setActiveInject, addOverlay, setOverlays, overlays, pendingPin, setPendingPin } = useGameStore();
     const [actionFeedback, setActionFeedback] = useState<{ approved: boolean; response: string | null } | null>(null);
+    const [pinPublished, setPinPublished] = useState(false);
     const [showRoleDetail, setShowRoleDetail] = useState(false);
 
     useEffect(() => {
@@ -46,6 +47,13 @@ export default function GamePage() {
 
         socket.on('overlays_set', (data: { overlays: MapOverlay[] }) => {
             setOverlays(data.overlays);
+            // Check if admin published the player's pending pin
+            const current = useGameStore.getState().pendingPin;
+            if (current && data.overlays.some((o) => o.id === `action_pin_${current.decisionId}`)) {
+                setPendingPin(null);
+                setPinPublished(true);
+                setTimeout(() => setPinPublished(false), 4000);
+            }
         });
 
         socket.on('scenario_stopped', () => {
@@ -64,7 +72,7 @@ export default function GamePage() {
     return (
         <main className="relative w-full h-dvh overflow-hidden bg-gray-100">
             {/* Map fills the screen */}
-            <GameMap overlays={overlays} />
+            <GameMap overlays={overlays} pendingPin={pendingPin} />
 
             {/* Role badge top left — tappable to open detail */}
             {player?.role && (
@@ -83,6 +91,32 @@ export default function GamePage() {
             {/* Role detail panel */}
             {showRoleDetail && player?.role && (
                 <RoleDetailPanel role={player.role} onClose={() => setShowRoleDetail(false)} />
+            )}
+
+            {/* Pending pin banner */}
+            {pendingPin && !pinPublished && (
+                <div className="absolute bottom-24 left-0 right-0 z-20 flex justify-center px-4">
+                    <div className="bg-orange-50 border border-orange-300 rounded-xl px-4 py-3 text-orange-700 text-sm shadow-md flex items-center gap-3">
+                        <span className="animate-pulse">📍</span>
+                        <span>Locatie ingediend — wachten op goedkeuring</span>
+                        <button
+                            onClick={() => setPendingPin(null)}
+                            className="text-orange-400 hover:text-orange-600 text-xs ml-1 transition"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Pin published confirmation */}
+            {pinPublished && (
+                <div className="absolute bottom-24 left-0 right-0 z-20 flex justify-center px-4">
+                    <div className="bg-green-50 border border-green-300 rounded-xl px-4 py-3 text-green-700 text-sm shadow-md flex items-center gap-2">
+                        <span>✓</span>
+                        <span>Jouw locatie is gepubliceerd op de kaart</span>
+                    </div>
+                </div>
             )}
 
             {/* Admin response feedback */}

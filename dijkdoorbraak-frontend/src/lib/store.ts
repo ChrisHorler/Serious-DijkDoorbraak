@@ -76,6 +76,10 @@ interface GameStore {
     removeOverlay: (id: string) => void;
     setOverlays: (overlays: MapOverlay[]) => void;
 
+    // Pending pin (submitted by player, awaiting admin publish)
+    pendingPin: { decisionId: string; lat: number; lng: number } | null;
+    setPendingPin: (pin: { decisionId: string; lat: number; lng: number } | null) => void;
+
     // Incident location (set when scenario starts)
     incidentLocation: [number, number] | null;
     setIncidentLocation: (loc: [number, number] | null) => void;
@@ -138,6 +142,9 @@ export const useGameStore = create<GameStore>() (
             feedbackQuestions: [],
             setFeedbackQuestions: (questions) => set({ feedbackQuestions: questions }),
 
+            pendingPin: null,
+            setPendingPin: (pin) => set({ pendingPin: pin }),
+
             reset: () => set({
                 session: null,
                 player: null,
@@ -148,6 +155,7 @@ export const useGameStore = create<GameStore>() (
                 overlays: [],
                 incidentLocation: null,
                 feedbackQuestions: [],
+                pendingPin: null,
             }),
         }),
         {

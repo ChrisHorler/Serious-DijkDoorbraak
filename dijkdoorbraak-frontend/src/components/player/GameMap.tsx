@@ -18,9 +18,10 @@ const INCIDENT_LOCATION: [number, number] = [51.8836, 4.6317];
 
 interface GameMapProps {
     overlays?: MapOverlay[];
+    pendingPin?: { lat: number; lng: number } | null;
 }
 
-export default function GameMap({ overlays = [] }: GameMapProps) {
+export default function GameMap({ overlays = [], pendingPin }: GameMapProps) {
     return (
         <MapContainer
             center={INCIDENT_LOCATION}
@@ -38,6 +39,19 @@ export default function GameMap({ overlays = [] }: GameMapProps) {
                     Dijkdoorbraak gedetecteerd
                 </Popup>
             </Marker>
+
+            {pendingPin && (() => {
+                const pendingIcon = L.divIcon({
+                    className: '',
+                    html: `<div style="width:18px;height:18px;background:#f97316;border:3px solid white;border-radius:50%;box-shadow:0 0 0 4px rgba(249,115,22,0.35),0 2px 6px rgba(0,0,0,0.4);animation:pulse 1.5s infinite"></div>`,
+                    iconAnchor: [9, 9],
+                });
+                return (
+                    <Marker position={[pendingPin.lat, pendingPin.lng]} icon={pendingIcon}>
+                        <Popup>Jouw locatie — wachten op goedkeuring</Popup>
+                    </Marker>
+                );
+            })()}
 
             {overlays.map((overlay) => {
                 if (overlay.kind === 'polygon') {

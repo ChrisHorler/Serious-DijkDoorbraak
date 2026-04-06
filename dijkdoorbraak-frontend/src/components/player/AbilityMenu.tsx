@@ -10,7 +10,7 @@ export default function AbilityMenu() {
     const [submitted, setSubmitted] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [pendingAbility, setPendingAbility] = useState<{ id: string; name: string } | null>(null);
-    const { player, session } = useGameStore();
+    const { player, session, setPendingPin } = useGameStore();
 
     const abilities = player?.role?.abilities ?? [];
 
@@ -33,11 +33,15 @@ export default function AbilityMenu() {
             actionDetail: details.detail || null,
         }, (res: any) => {
             setSubmitting(false);
-            setPendingAbility(null);
             if (res.success) {
+                if (details.location && res.decision?.id) {
+                    setPendingPin({ decisionId: res.decision.id, lat: details.location[0], lng: details.location[1] });
+                }
                 setSubmitted(pendingAbility.name);
                 setTimeout(() => setSubmitted(null), 3000);
+                setPendingAbility(null);
             } else {
+                setPendingAbility(null);
                 alert(res.message ?? 'Actie mislukt. Probeer het opnieuw.');
             }
         });

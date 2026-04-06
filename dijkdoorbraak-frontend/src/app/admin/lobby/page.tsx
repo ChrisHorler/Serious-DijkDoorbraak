@@ -50,6 +50,7 @@ export default function AdminLobbyPage() {
     const [selectedScenario, setSelectedScenario] = useState('');
     const [creating, setCreating] = useState(false);
     const [starting, setStarting] = useState(false);
+    const [focusedQR, setFocusedQR] = useState<{ label: string; url: string } | null>(null);
 
     useEffect(() => {
         if (!authenticated) {
@@ -206,24 +207,26 @@ export default function AdminLobbyPage() {
                             <p className="text-5xl font-mono font-bold text-gray-900 tracking-widest">{session.joinCode}</p>
                         </div>
                         <div className="flex gap-6">
-                            <div className="text-center space-y-2">
-                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
-                                    <QRCodeSVG
-                                        value={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/player/join?code=${session.joinCode}`}
-                                        size={96}
-                                    />
-                                </div>
-                                <p className="text-gray-500 text-xs font-medium">Deelnemers</p>
-                            </div>
-                            <div className="text-center space-y-2">
-                                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200">
-                                    <QRCodeSVG
-                                        value={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/spectator/join?code=${session.joinCode}`}
-                                        size={96}
-                                    />
-                                </div>
-                                <p className="text-blue-600 text-xs font-medium">Toeschouwers</p>
-                            </div>
+                            {[
+                                { label: 'Deelnemers', path: 'player/join', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-500' },
+                                { label: 'Toeschouwers', path: 'spectator/join', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600' },
+                            ].map(({ label, path, bg, border, text }) => {
+                                const url = `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002'}/${path}?code=${session.joinCode}`;
+                                return (
+                                    <div key={label} className="text-center space-y-2">
+                                        <div className={`${bg} p-3 rounded-xl border ${border} relative group`}>
+                                            <QRCodeSVG value={url} size={96} />
+                                            <button
+                                                onClick={() => setFocusedQR({ label, url })}
+                                                className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/0 group-hover:bg-black/30 transition opacity-0 group-hover:opacity-100 text-white text-xs font-semibold"
+                                            >
+                                                ⛶ Focus
+                                            </button>
+                                        </div>
+                                        <p className={`${text} text-xs font-medium`}>{label}</p>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -393,6 +396,29 @@ export default function AdminLobbyPage() {
                 )}
 
             </div>
+
+            {/* QR Focus modal */}
+            {focusedQR && (
+                <div
+                    className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+                    onClick={() => setFocusedQR(null)}
+                >
+                    <div
+                        className="bg-white rounded-3xl p-8 flex flex-col items-center gap-6 shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <p className="text-gray-500 text-sm font-semibold uppercase tracking-widest">{focusedQR.label}</p>
+                        <QRCodeSVG value={focusedQR.url} size={320} />
+                        <p className="text-gray-400 text-xs font-mono break-all max-w-xs text-center">{focusedQR.url}</p>
+                        <button
+                            onClick={() => setFocusedQR(null)}
+                            className="text-gray-400 hover:text-gray-700 text-sm transition"
+                        >
+                            ✕ Sluiten
+                        </button>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }
