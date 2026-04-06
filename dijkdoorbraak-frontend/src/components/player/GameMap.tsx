@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapOverlay } from '@/lib/store';
+import { INCIDENT_LOCATION } from '@/lib/overlayPresets';
 
 // Fix leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -12,9 +13,6 @@ L.Icon.Default.mergeOptions({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
-
-// Dike breach location
-const INCIDENT_LOCATION: [number, number] = [51.8836, 4.6317];
 
 interface GameMapProps {
     overlays?: MapOverlay[];
