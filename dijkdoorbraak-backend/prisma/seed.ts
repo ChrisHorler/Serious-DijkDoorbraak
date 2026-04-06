@@ -205,36 +205,77 @@ const roles = [
 
 // ─── Scenario ─────────────────────────────────────────────────────────────────
 
-// Incident: dike breach near Venlo, Noord-Limburg
-const INCIDENT_LAT = 51.3704;
-const INCIDENT_LNG = 6.1724;
+// Real location: Maasdijk near Blerick (west bank of the Maas, Noord-Limburg)
+// This is the actual dijk that protects Blerick/Venlo from the Maas river
+const INCIDENT_LAT = 51.3739;
+const INCIDENT_LNG = 6.1105;
 
 const SCENARIO_ID = "00000000-0000-0000-0000-000000000001";
 
+// Key locations in the Blerick flood zone — pre-placed as custom overlays
+const customOverlays = [
+  {
+    id: "overlay-ziekenhuis",
+    type: "custom",
+    label: "Zorgcentrum De Zorggroep",
+    color: "#ef4444",
+    kind: "marker",
+    coordinates: [51.3892, 6.1281],
+    icon: "🏥",
+  },
+  {
+    id: "overlay-basisschool",
+    type: "custom",
+    label: "Basisschool De Akkers",
+    color: "#f59e0b",
+    kind: "marker",
+    coordinates: [51.3825, 6.1345],
+    icon: "🏫",
+  },
+  {
+    id: "overlay-middelbare-school",
+    type: "custom",
+    label: "Middelbare School SG Blerick",
+    color: "#f59e0b",
+    kind: "marker",
+    coordinates: [51.3862, 6.1228],
+    icon: "🏫",
+  },
+  {
+    id: "overlay-winkelcentrum",
+    type: "custom",
+    label: "Winkelcentrum Blerick",
+    color: "#8b5cf6",
+    kind: "marker",
+    coordinates: [51.3758, 6.1389],
+    icon: "🏪",
+  },
+];
+
 const scenarioData = {
-  title: "Dijkdoorbraak Venlo",
+  title: "Dijkdoorbraak Blerick",
   description:
-    "Na dagen van hevige regenval staat de Maas bij Venlo extreem hoog. Op dijkvak 14 bij Venlo-Noord constateert Rijkswaterstaat een kritieke lekkage. Binnen twee uur breekt de dijk door. Water stroomt snel het gebied achter de dijk in — straten, woningen en bedrijven lopen onder. Wegen worden onbegaanbaar, stroom en drinkwater vallen deels uit. Het ROT wordt geactiveerd.",
+    "Na dagen van hevige regenval staat de Maas bij Venlo extreem hoog. De Maasdijk bij Blerick — de dijk die de wijk Blerick beschermt tegen het rivierwater — vertoont op meerdere plekken scheuren. De situatie start op GRIP 2 niveau met het ROT in Noord-Limburg actief. Naarmate de crisis escaleert, wordt opgeschaald naar GRIP 3. Het overstromingsgebied raakt snel bewoond terrein, met in het getroffen gebied een zorgcentrum, twee scholen en een klein winkelcentrum.",
   incidentLat: INCIDENT_LAT,
   incidentLng: INCIDENT_LNG,
   phases: [
     {
       id: "phase-1",
-      name: "Fase 1 — Waarschuwing",
+      name: "Fase 1 — GRIP 2: Waarschuwing",
       floodZoneScale: 0.5,
       activeOverlayIds: [],
       injectId: null,
     },
     {
       id: "phase-2",
-      name: "Fase 2 — Dijkdoorbraak",
+      name: "Fase 2 — GRIP 2: Dijkdoorbraak",
       floodZoneScale: 1.0,
       activeOverlayIds: [],
       injectId: null,
     },
     {
       id: "phase-3",
-      name: "Fase 3 — Opschaling & Evacuatie",
+      name: "Fase 3 — GRIP 3: Volledige opschaling",
       floodZoneScale: 1.8,
       activeOverlayIds: [],
       injectId: null,
@@ -242,75 +283,75 @@ const scenarioData = {
   ],
 };
 
-// Injects — triggerTime is in seconds (used as a reference; admin fires manually)
+// Injects — triggerTime is in seconds (reference only; admin fires manually)
 const injects = [
   {
-    title: "Waterstand bereikt alarmfase",
+    title: "GRIP 2 — ROT geactiveerd",
     content:
-      "Rijkswaterstaat meldt dat de Maas bij Venlo 2,4 meter boven normaal staat en verder stijgt. Dijkvak 14 bij Venlo-Noord vertoont scheuren. De dijkwacht heeft alarm geslagen. Het ROT wordt geactiveerd. Beeldvorming: wat weten we en wat hebben we nog nodig?",
+      "De Maasdijk bij Blerick vertoont op dijkvak 7 scheuren. Waterstand Maas: 2,4 m boven normaal en stijgend. De Veiligheidsregio Limburg-Noord heeft GRIP 2 afgekondigd. Het ROT is geactiveerd. Wat weten we? Wat hebben we nog nodig?",
     triggerTime: 60,
     targetRole: null,
   },
   {
-    title: "Dijkdoorbraak geconstateerd",
+    title: "Dijkdoorbraak Blerick bevestigd",
     content:
-      "Dijkvak 14 bij Venlo-Noord is doorgebroken. Water stroomt het gebied in met een snelheid van circa 50 m³/s. De wijk Blerick loopt gedeeltelijk onder. Eerste bewoners melden zich bij de hulpdiensten. Schaal op.",
+      "De Maasdijk bij Blerick is op dijkvak 7 doorgebroken. Water stroomt met circa 50 m³/s het gebied in. Blerick loopt gedeeltelijk onder. Zorgcentrum De Zorggroep en omliggende wijken zijn direct bedreigd. Eerste bewoners melden zich bij hulpdiensten.",
     triggerTime: 300,
     targetRole: null,
   },
   {
-    title: "Stroomuitval woonwijk Blerick",
+    title: "GRIP 3 — Opschaling vereist",
     content:
-      "Netbeheerder meldt stroomuitval in woonwijk Blerick. Circa 3.200 huishoudens zitten zonder stroom. Het transformatorstation staat onder water. Verwachte hersteltijd: onbekend.",
+      "De omvang van de overstroming overstijgt de capaciteit van één veiligheidsregio. De burgemeester van Venlo verzoekt opschaling naar GRIP 3. Het RBT wordt geactiveerd. Alle diensten: stem af op de nieuwe gezagsverhoudingen.",
     triggerTime: 480,
-    targetRole: "BZ",
+    targetRole: "ROL",
   },
   {
-    title: "Opvanglocaties dreigen vol te lopen",
+    title: "Zorgcentrum De Zorggroep — dringende evacuatie",
     content:
-      "Sporthal De Kegel (Venlo) zit vol — 350 geëvacueerden, maximumcapaciteit bereikt. Nog minstens 500 bewoners zijn onderweg naar de opvang. Extra locaties zijn nodig.",
+      "Zorgcentrum De Zorggroep in Blerick staat 60 cm onder water. 85 bewoners kunnen niet zelfstandig evacueren, waaronder bedementen patiënten en rolstoelafhankelijken. Personeel is ter plaatse maar vraagt om dringende ondersteuning.",
     triggerTime: 600,
+    targetRole: "GHOR",
+  },
+  {
+    title: "Scholen in gevaar — leerlingen aanwezig",
+    content:
+      "Basisschool De Akkers en Middelbare School SG Blerick zijn in gebruik. Samen zijn er circa 480 leerlingen aanwezig. Het water stijgt snel richting de schoolgebouwen. Ouders proberen massaal hun kinderen op te halen, wat de wegen verstopt.",
+    triggerTime: 720,
+    targetRole: "OvD-P",
+  },
+  {
+    title: "Opvanglocaties dreigen vol",
+    content:
+      "Sporthal De Kegel (Venlo) zit vol — 350 geëvacueerden, maximumcapaciteit bereikt. Nog minstens 500 bewoners zijn onderweg naar de opvang. Winkelcentrum Blerick is voorgesteld als noodopvanglocatie maar is nog niet ingericht.",
+    triggerTime: 900,
     targetRole: "BZ",
   },
   {
-    title: "Misinformatie op sociale media",
+    title: "Misinformatie en paniek op sociale media",
     content:
-      "Op sociale media circuleren berichten dat ook de dijk bij Tegelen doorbreekt en dat het drinkwater besmet is. Deze berichten zijn onbevestigd maar zorgen voor paniek. Meerdere inwoners bellen 112 met vragen.",
-    triggerTime: 720,
+      "Op sociale media circuleren berichten dat ook de dijk bij Tegelen doorbreekt en dat leidingwater besmet is. Beide berichten zijn onbevestigd. Meldkamer Limburg rapporteert een verdubbeling van 112-oproepen. Paniek neemt toe.",
+    triggerTime: 1080,
     targetRole: "COM",
   },
   {
-    title: "Verzoek militaire ondersteuning",
+    title: "Verzoek militaire bijstand",
     content:
-      "De Operationeel Leider overweegt een formele aanvraag voor militaire bijstand. Boten en viertonners zijn nodig voor evacuatie van mensen die niet zelfstandig weg kunnen. Defensie geeft aan dat inzet minimaal vier uur voorbereiding vergt.",
-    triggerTime: 900,
+      "De OvD-B geeft aan dat boten tekort komen voor evacuatie van Zorgcentrum De Zorggroep. Defensie heeft boten en viertonners beschikbaar, maar inzet vergt minimaal vier uur voorbereiding na formele aanvraag via civiele autoriteiten.",
+    triggerTime: 1260,
     targetRole: "DEF",
-  },
-  {
-    title: "Verpleeghuis De Vliet bedreigd",
-    content:
-      "Verpleeghuis De Vliet in Blerick staat 80 cm onder water. Er verblijven 120 bewoners die niet zelfstandig kunnen evacueren. Het personeel vraagt om dringende hulp. GHOR en brandweer zijn gevraagd te reageren.",
-    triggerTime: 1080,
-    targetRole: "GHOR",
   },
   {
     title: "N271 dreigt onbegaanbaar",
     content:
-      "De N271 (Venlo–Tegelen) staat op meerdere punten onder water. Dit is de belangrijkste evacuatieroute uit het getroffen gebied. Rijkswaterstaat overweegt afsluiting — maar dit belemmert ook de aanvoer van hulpdiensten.",
-    triggerTime: 1260,
-    targetRole: "OvD-P",
-  },
-  {
-    title: "Drinkwatervoorziening in gevaar",
-    content:
-      "Waterbedrijf Limburg meldt dat het pompstation bij Blerick mogelijk wordt bereikt door het overstromingswater. Bij uitval dreigt drinkwatertekort voor 80.000 inwoners. Er wordt gevraagd om een besluit over bescherming of noodalternatief.",
+      "De N271 (Venlo–Tegelen) staat op twee punten 30 cm onder water. Dit is de voornaamste evacuatieroute uit Blerick. Afsluiting belemmert ook de aanvoer van hulpmaterieel. RWS vraagt om een besluit: afsluiten of openhouden?",
     triggerTime: 1440,
     targetRole: "RWS",
   },
   {
     title: "Bewoners weigeren evacuatie",
     content:
-      "In de Vossener Molen-wijk weigeren meerdere tientallen bewoners te evacueren. Ze willen hun eigendommen bewaken. De politie vraagt om een bestuurlijk besluit: kan evacuatie worden afgedwongen?",
+      "In de Koolhoven-wijk weigeren tientallen bewoners te evacueren om hun eigendommen te bewaken. De politie kan niet afdwingen zonder bestuurlijk besluit. Burgemeester vraagt het ROT om advies: vrijwillig of verplicht evacueren?",
     triggerTime: 1620,
     targetRole: "ROL",
   },
@@ -380,10 +421,11 @@ async function main() {
 
   // Patch fields added after client was generated
   await prisma.$executeRawUnsafe(
-    `UPDATE "Scenario" SET "incidentLat" = $1, "incidentLng" = $2, phases = $3::jsonb WHERE id = $4`,
+    `UPDATE "Scenario" SET "incidentLat" = $1, "incidentLng" = $2, phases = $3::jsonb, "customOverlays" = $4::jsonb WHERE id = $5`,
     scenarioData.incidentLat,
     scenarioData.incidentLng,
     JSON.stringify(scenarioData.phases),
+    JSON.stringify(customOverlays),
     SCENARIO_ID,
   );
 
