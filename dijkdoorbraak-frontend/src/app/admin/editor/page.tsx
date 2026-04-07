@@ -86,7 +86,7 @@ function generateId(): string {
 }
 
 function newPhase(index: number): EscalationPhase {
-    return { id: generateId(), name: `Fase ${index + 1}`, floodZoneScale: null, activeOverlayIds: [], injectId: null };
+    return { id: generateId(), name: `Fase ${index + 1}`, floodZoneScale: null, floodZoneCoordinates: null, activeOverlayIds: [], injectId: null };
 }
 
 // ── Component ──────────────────────────────────────────────────────
@@ -137,6 +137,8 @@ export default function EditorPage() {
     const [draftLabel, setDraftLabel] = useState('');
     const [draftColor, setDraftColor] = useState('#3b82f6');
     const [draftIcon, setDraftIcon] = useState<string | null>(null);
+    // When set, polygon drawing is for a phase flood zone instead of a custom overlay
+    const [drawingFloodForPhaseId, setDrawingFloodForPhaseId] = useState<string | null>(null);
 
     // ── Roles ──────────────────────────────────────────────────────
     const [roles, setRoles] = useState<Role[]>([]);
@@ -358,15 +360,23 @@ export default function EditorPage() {
         const coords = [...drawPoints] as [number, number][];
         setDrawMode('none');
         setDrawPoints([]);
-        setPendingDraft({ kind: 'polygon', coordinates: coords });
-        setDraftLabel('');
-        setDraftColor('#3b82f6');
+        if (drawingFloodForPhaseId) {
+            // Save directly as flood zone for that phase
+            updatePhase(drawingFloodForPhaseId, { floodZoneCoordinates: coords, floodZoneScale: null });
+            setDrawingFloodForPhaseId(null);
+            setPhasesSaved(false);
+        } else {
+            setPendingDraft({ kind: 'polygon', coordinates: coords });
+            setDraftLabel('');
+            setDraftColor('#3b82f6');
+        }
     }
 
     function handleCancelDraw() {
         setDrawMode('none');
         setDrawPoints([]);
         setPendingDraft(null);
+        setDrawingFloodForPhaseId(null);
     }
 
     async function saveCustomOverlay() {
@@ -475,13 +485,20 @@ export default function EditorPage() {
     // preview reflects what's actually visible at that point in the scenario.
     const previewPhaseMerged = previewPhaseIndex >= 0 ? (() => {
         let floodZoneScale: number | null = null;
+        let floodZoneCoordinates: [number, number][] | null = null;
         for (let i = 0; i <= previewPhaseIndex; i++) {
-            if (phases[i].floodZoneScale !== null) floodZoneScale = phases[i].floodZoneScale;
+            if (phases[i].floodZoneCoordinates != null && phases[i].floodZoneCoordinates!.length >= 3) {
+                floodZoneCoordinates = phases[i].floodZoneCoordinates!;
+                floodZoneScale = null;
+            } else if (phases[i].floodZoneScale !== null) {
+                floodZoneScale = phases[i].floodZoneScale;
+                floodZoneCoordinates = null;
+            }
         }
         const activeOverlayIds = [...new Set(
             phases.slice(0, previewPhaseIndex + 1).flatMap(p => p.activeOverlayIds)
         )];
-        return { ...phases[previewPhaseIndex], floodZoneScale, activeOverlayIds };
+        return { ...phases[previewPhaseIndex], floodZoneScale, floodZoneCoordinates, activeOverlayIds };
     })() : null;
 
     // ── Render ─────────────────────────────────────────────────────
@@ -652,20 +669,43 @@ export default function EditorPage() {
                                                     </div>
                                                     {/* Flood zone */}
                                                     <div className="flex items-center gap-1.5 pl-6 flex-wrap">
-                                                        <button onClick={() => updatePhase(phase.id, { floodZoneScale: null })}
-                                                            className={`px-2 py-0.5 rounded text-xs font-semibold border transition ${phase.floodZoneScale === null ? 'bg-gray-200 border-gray-400 text-gray-700' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-700'}`}>
+                                                        <button onClick={() => updatePhase(phase.id, { floodZoneScale: null, floodZoneCoordinates: null })}
+                                                            className={`px-2 py-0.5 rounded text-xs font-semibold border transition ${phase.floodZoneScale === null && !phase.floodZoneCoordinates ? 'bg-gray-200 border-gray-400 text-gray-700' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-700'}`}>
                                                             Geen overstroming
                                                         </button>
                                                         {FLOOD_SIZES.map(({ label, value }) => {
-                                                            const active = phase.floodZoneScale === value;
+                                                            const active = phase.floodZoneScale === value && !phase.floodZoneCoordinates;
                                                             const activeClass = value === 0.5 ? 'bg-blue-400 border-blue-400 text-white' : value === 1.0 ? 'bg-blue-600 border-blue-600 text-white' : 'bg-blue-800 border-blue-800 text-white';
                                                             return (
-                                                                <button key={value} onClick={() => updatePhase(phase.id, { floodZoneScale: value })}
+                                                                <button key={value} onClick={() => updatePhase(phase.id, { floodZoneScale: value, floodZoneCoordinates: null })}
                                                                     className={`px-2 py-0.5 rounded text-xs font-semibold border transition flex items-center gap-1 ${active ? activeClass : 'bg-white border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-600'}`}>
                                                                     🌊 {label}
                                                                 </button>
                                                             );
                                                         })}
+                                                        {/* Custom drawn flood zone */}
+                                                        {phase.floodZoneCoordinates && phase.floodZoneCoordinates.length >= 3 ? (
+                                                            <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold border bg-blue-600 border-blue-600 text-white">
+                                                                🌊 Getekende zone
+                                                                <button
+                                                                    onClick={() => updatePhase(phase.id, { floodZoneCoordinates: null })}
+                                                                    className="ml-0.5 opacity-70 hover:opacity-100 transition"
+                                                                    title="Zone verwijderen"
+                                                                >✕</button>
+                                                                <button
+                                                                    onClick={() => { setDrawMode('polygon'); setDrawPoints([]); setDrawingFloodForPhaseId(phase.id); setPendingDraft(null); }}
+                                                                    className="ml-0.5 opacity-70 hover:opacity-100 transition"
+                                                                    title="Opnieuw tekenen"
+                                                                >↺</button>
+                                                            </span>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => { setDrawMode('polygon'); setDrawPoints([]); setDrawingFloodForPhaseId(phase.id); setPendingDraft(null); }}
+                                                                className="px-2 py-0.5 rounded text-xs font-semibold border transition bg-white border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-600"
+                                                            >
+                                                                ✏ Teken zone
+                                                            </button>
+                                                        )}
                                                     </div>
                                                     {/* Inject */}
                                                     <div className="flex items-center gap-2 pl-6">
@@ -759,7 +799,12 @@ export default function EditorPage() {
 
                                     {drawMode === 'polygon' && (
                                         <>
-                                            <span className="text-blue-600 text-xs">Klik op de kaart om punten te plaatsen ({drawPoints.length} punt{drawPoints.length !== 1 ? 'en' : ''})</span>
+                                            <span className="text-blue-600 text-xs">
+                                                {drawingFloodForPhaseId
+                                                    ? `🌊 Overstromingszone voor "${phases.find(p => p.id === drawingFloodForPhaseId)?.name}" — klik punten op de kaart (${drawPoints.length} punt${drawPoints.length !== 1 ? 'en' : ''})`
+                                                    : `Klik op de kaart om punten te plaatsen (${drawPoints.length} punt${drawPoints.length !== 1 ? 'en' : ''})`
+                                                }
+                                            </span>
                                             <button onClick={handleFinishPolygon} disabled={drawPoints.length < 3}
                                                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white rounded-lg text-xs font-semibold transition">
                                                 ✓ Voltooien

@@ -15,7 +15,7 @@ const GameMap = dynamic(() => import('@/components/player/GameMap'), { ssr: fals
 
 export default function GamePage() {
     const router = useRouter();
-    const { player, session, addInject, addToast, setActiveInject, addOverlay, setOverlays, overlays, pendingPin, setPendingPin } = useGameStore();
+    const { player, session, addInject, addToast, setActiveInject, addOverlay, setOverlays, overlays, pendingPin, setPendingPin, incidentLocation } = useGameStore();
     const [actionFeedback, setActionFeedback] = useState<{ approved: boolean; response: string | null } | null>(null);
     const [pinPublished, setPinPublished] = useState(false);
     const [showRoleDetail, setShowRoleDetail] = useState(false);
@@ -72,7 +72,7 @@ export default function GamePage() {
     return (
         <main className="relative w-full h-dvh overflow-hidden bg-gray-100">
             {/* Map fills the screen */}
-            <GameMap overlays={overlays} pendingPin={pendingPin} />
+            <GameMap overlays={overlays} pendingPin={pendingPin} incidentLocation={incidentLocation} />
 
             {/* Role badge top left — tappable to open detail */}
             {player?.role && (

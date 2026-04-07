@@ -104,6 +104,19 @@ export class SessionService {
     return this.prisma.db.scenario.delete({ where: { id } });
   }
 
+  async getScenarioStartData(scenarioId: string) {
+    const scenario = await (this.prisma.db as any).scenario.findUnique({ where: { id: scenarioId } });
+    const feedbackQuestions = await (this.prisma.db as any).feedbackQuestion.findMany({
+      where: { scenarioId },
+      orderBy: { order: 'asc' },
+    });
+    return {
+      incidentLat: scenario?.incidentLat ?? null,
+      incidentLng: scenario?.incidentLng ?? null,
+      feedbackQuestions,
+    };
+  }
+
   async endAllRunningSessions() {
     return this.prisma.db.session.updateMany({
       where: { status: SessionStatus.RUNNING },

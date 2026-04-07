@@ -25,6 +25,7 @@ function newPhase(index: number): EscalationPhase {
         id: generateId(),
         name: `Fase ${index + 1}`,
         floodZoneScale: null,
+        floodZoneCoordinates: null,
         activeOverlayIds: [],
         injectId: null,
     };

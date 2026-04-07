@@ -17,12 +17,14 @@ L.Icon.Default.mergeOptions({
 interface GameMapProps {
     overlays?: MapOverlay[];
     pendingPin?: { lat: number; lng: number } | null;
+    incidentLocation?: [number, number] | null;
 }
 
-export default function GameMap({ overlays = [], pendingPin }: GameMapProps) {
+export default function GameMap({ overlays = [], pendingPin, incidentLocation }: GameMapProps) {
+    const center = incidentLocation ?? INCIDENT_LOCATION;
     return (
         <MapContainer
-            center={INCIDENT_LOCATION}
+            center={center}
             zoom={13}
             className="w-full h-full z-0"
             zoomControl={false}
@@ -31,7 +33,7 @@ export default function GameMap({ overlays = [], pendingPin }: GameMapProps) {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <Marker position={INCIDENT_LOCATION}>
+            <Marker position={center}>
                 <Popup>
                     <strong>Incident locatie</strong><br />
                     Dijkdoorbraak gedetecteerd

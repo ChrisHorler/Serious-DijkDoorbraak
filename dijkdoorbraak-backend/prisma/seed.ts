@@ -205,19 +205,18 @@ const roles = [
 
 // ─── Scenario ─────────────────────────────────────────────────────────────────
 
-// Real location: Maasdijk near Blerick (west bank of the Maas, Noord-Limburg)
-// This is the actual dijk that protects Blerick/Venlo from the Maas river
+// Location: Maasdijk near Blerick, Noord-Limburg — fictional town "Limborgum"
 const INCIDENT_LAT = 51.3739;
 const INCIDENT_LNG = 6.1105;
 
 const SCENARIO_ID = "00000000-0000-0000-0000-000000000001";
 
-// Key locations in the Blerick flood zone — pre-placed as custom overlays
+// Key locations in Limborgum — pre-placed as custom overlays on the map
 const customOverlays = [
   {
     id: "overlay-ziekenhuis",
     type: "custom",
-    label: "Zorgcentrum De Zorggroep",
+    label: "Ziekenhuis & Zorgcentrum Limborgum",
     color: "#ef4444",
     kind: "marker",
     coordinates: [51.3892, 6.1281],
@@ -226,7 +225,7 @@ const customOverlays = [
   {
     id: "overlay-basisschool",
     type: "custom",
-    label: "Basisschool De Akkers",
+    label: "Basisschool Limborgum",
     color: "#f59e0b",
     kind: "marker",
     coordinates: [51.3825, 6.1345],
@@ -235,47 +234,47 @@ const customOverlays = [
   {
     id: "overlay-middelbare-school",
     type: "custom",
-    label: "Middelbare School SG Blerick",
+    label: "Middelbare School Limborgum",
     color: "#f59e0b",
     kind: "marker",
     coordinates: [51.3862, 6.1228],
-    icon: "🏫",
+    icon: "🎓",
   },
   {
-    id: "overlay-winkelcentrum",
+    id: "overlay-centrum",
     type: "custom",
-    label: "Winkelcentrum Blerick",
+    label: "Historisch Stadscentrum Limborgum",
     color: "#8b5cf6",
     kind: "marker",
     coordinates: [51.3758, 6.1389],
-    icon: "🏪",
+    icon: "🏛️",
   },
 ];
 
 const scenarioData = {
-  title: "Dijkdoorbraak Blerick",
+  title: "Dijkdoorbraak Limborgum",
   description:
-    "Na dagen van hevige regenval staat de Maas bij Venlo extreem hoog. De Maasdijk bij Blerick — de dijk die de wijk Blerick beschermt tegen het rivierwater — vertoont op meerdere plekken scheuren. De situatie start op GRIP 2 niveau met het ROT in Noord-Limburg actief. Naarmate de crisis escaleert, wordt opgeschaald naar GRIP 3. Het overstromingsgebied raakt snel bewoond terrein, met in het getroffen gebied een zorgcentrum, twee scholen en een klein winkelcentrum.",
+    "Het stadje Limborgum in Zuid-Limburg ligt al eeuwen beschut achter haar dijken aan de rivier. In de stad liggen een ziekenhuis met zorgcentrum (ouderen en revaliderende patiënten), een school voor basis- en middelbaar onderwijs en een historisch stadscentrum. Na drie dagen van extreme neerslag — KNMI code oranje — staat de rivier gevaarlijk hoog. Om 14:28 constateren dijkinspecteurs van het waterschap wellen aan de landzijde van de dijk: water borrelt omhoog uit de grond. Dit is het moment dat de crisis begint. Het ROT wordt geactiveerd op GRIP 2. De nacht daarna escaleert de situatie verder naar GRIP 3 en uiteindelijk breekt de dijk door.",
   incidentLat: INCIDENT_LAT,
   incidentLng: INCIDENT_LNG,
   phases: [
     {
       id: "phase-1",
-      name: "Fase 1 — GRIP 2: Waarschuwing",
+      name: "Fase 1 — GRIP 2: Acute dreiging",
       floodZoneScale: 0.5,
       activeOverlayIds: [],
       injectId: null,
     },
     {
       id: "phase-2",
-      name: "Fase 2 — GRIP 2: Dijkdoorbraak",
+      name: "Fase 2 — GRIP 3: Dijkdoorbraak (03:56)",
       floodZoneScale: 1.0,
       activeOverlayIds: [],
       injectId: null,
     },
     {
       id: "phase-3",
-      name: "Fase 3 — GRIP 3: Volledige opschaling",
+      name: "Fase 3 — GRIP 3: Escalatie & neveneffecten",
       floodZoneScale: 1.8,
       activeOverlayIds: [],
       injectId: null,
@@ -283,76 +282,108 @@ const scenarioData = {
   ],
 };
 
-// Injects — triggerTime is in seconds (reference only; admin fires manually)
+// ─── Injects ──────────────────────────────────────────────────────────────────
+// Based on the crisis timeline from "fasen van de crisis":
+// 14:28 — Wellen geconstateerd → game start (GRIP 2)
+// 21:02 — Acute dreiging, zandzakken onvoldoende → BESLISMOMENT 2 (GRIP 3)
+// 03:56 — Dijkdoorbraak → water stroomt woonwijk binnen
+// Dag 1-3 — Escalatie: brug, chemisch lek, plunderingen
+
 const injects = [
+  // ── Fase 1: GRIP 2 — Acute dreiging ────────────────────────────────────────
   {
-    title: "GRIP 2 — ROT geactiveerd",
+    title: "14:28 — Wellen geconstateerd | GRIP 2 actief",
     content:
-      "De Maasdijk bij Blerick vertoont op dijkvak 7 scheuren. Waterstand Maas: 2,4 m boven normaal en stijgend. De Veiligheidsregio Limburg-Noord heeft GRIP 2 afgekondigd. Het ROT is geactiveerd. Wat weten we? Wat hebben we nog nodig?",
+      "Dijkinspecteurs van het waterschap constateren wellen op meerdere plekken aan de landzijde van de Maasdijk. Water borrelt omhoog uit de grond — het waterdrukverschil is gevaarlijk groot. Zandzakkenploegen zijn ingezet. De Veiligheidsregio Limburg heeft GRIP 2 afgekondigd. Het ROT is geactiveerd.\n\nBeginsituatie: wat weten we? Wat hebben we nog nodig? Wie doet wat?",
     triggerTime: 60,
     targetRole: null,
   },
   {
-    title: "Dijkdoorbraak Blerick bevestigd",
+    title: "15:15 — Eerste evacuatieadvies laaggelegen gebieden",
     content:
-      "De Maasdijk bij Blerick is op dijkvak 7 doorgebroken. Water stroomt met circa 50 m³/s het gebied in. Blerick loopt gedeeltelijk onder. Zorgcentrum De Zorggroep en omliggende wijken zijn direct bedreigd. Eerste bewoners melden zich bij hulpdiensten.",
+      "De burgemeester van Limborgum geeft een evacuatieadvies af voor de laaggelegen wijken direct achter de dijk. Het gaat nog om een advies, niet om een verplichting. Sommige bewoners vertrekken, anderen blijven. Op sociale media ontstaat discussie: 'Is dit echt nodig?'\n\nCommunicatie: wat wordt er gecommuniceerd naar de bevolking? Via welke kanalen?",
     triggerTime: 300,
-    targetRole: null,
-  },
-  {
-    title: "GRIP 3 — Opschaling vereist",
-    content:
-      "De omvang van de overstroming overstijgt de capaciteit van één veiligheidsregio. De burgemeester van Venlo verzoekt opschaling naar GRIP 3. Het RBT wordt geactiveerd. Alle diensten: stem af op de nieuwe gezagsverhoudingen.",
-    triggerTime: 480,
-    targetRole: "ROL",
-  },
-  {
-    title: "Zorgcentrum De Zorggroep — dringende evacuatie",
-    content:
-      "Zorgcentrum De Zorggroep in Blerick staat 60 cm onder water. 85 bewoners kunnen niet zelfstandig evacueren, waaronder bedementen patiënten en rolstoelafhankelijken. Personeel is ter plaatse maar vraagt om dringende ondersteuning.",
-    triggerTime: 600,
-    targetRole: "GHOR",
-  },
-  {
-    title: "Scholen in gevaar — leerlingen aanwezig",
-    content:
-      "Basisschool De Akkers en Middelbare School SG Blerick zijn in gebruik. Samen zijn er circa 480 leerlingen aanwezig. Het water stijgt snel richting de schoolgebouwen. Ouders proberen massaal hun kinderen op te halen, wat de wegen verstopt.",
-    triggerTime: 720,
-    targetRole: "OvD-P",
-  },
-  {
-    title: "Opvanglocaties dreigen vol",
-    content:
-      "Sporthal De Kegel (Venlo) zit vol — 350 geëvacueerden, maximumcapaciteit bereikt. Nog minstens 500 bewoners zijn onderweg naar de opvang. Winkelcentrum Blerick is voorgesteld als noodopvanglocatie maar is nog niet ingericht.",
-    triggerTime: 900,
-    targetRole: "BZ",
-  },
-  {
-    title: "Misinformatie en paniek op sociale media",
-    content:
-      "Op sociale media circuleren berichten dat ook de dijk bij Tegelen doorbreekt en dat leidingwater besmet is. Beide berichten zijn onbevestigd. Meldkamer Limburg rapporteert een verdubbeling van 112-oproepen. Paniek neemt toe.",
-    triggerTime: 1080,
     targetRole: "COM",
   },
   {
-    title: "Verzoek militaire bijstand",
+    title: "16:40 — Zandzakken onvoldoende | Waterstand stijgt door",
     content:
-      "De OvD-B geeft aan dat boten tekort komen voor evacuatie van Zorgcentrum De Zorggroep. Defensie heeft boten en viertonners beschikbaar, maar inzet vergt minimaal vier uur voorbereiding na formele aanvraag via civiele autoriteiten.",
-    triggerTime: 1260,
-    targetRole: "DEF",
-  },
-  {
-    title: "N271 dreigt onbegaanbaar",
-    content:
-      "De N271 (Venlo–Tegelen) staat op twee punten 30 cm onder water. Dit is de voornaamste evacuatieroute uit Blerick. Afsluiting belemmert ook de aanvoer van hulpmaterieel. RWS vraagt om een besluit: afsluiten of openhouden?",
-    triggerTime: 1440,
+      "Rijkswaterstaat meldt dat de waterstand sneller stijgt dan de modellen voorspelden. De zandzakken op de zwakste dijkvakken zijn niet voldoende. Extra materiaal is onderweg maar komt pas over twee uur aan. De prognose: de dijk houdt het maximaal tot morgenochtend.\n\nRWS: welk advies geef je het ROT? Wat kan er nog gedaan worden aan de dijk?",
+    triggerTime: 600,
     targetRole: "RWS",
   },
   {
-    title: "Bewoners weigeren evacuatie",
+    title: "17:30 — Ziekenhuis & zorgcentrum: evacuatie overwegen",
     content:
-      "In de Koolhoven-wijk weigeren tientallen bewoners te evacueren om hun eigendommen te bewaken. De politie kan niet afdwingen zonder bestuurlijk besluit. Burgemeester vraagt het ROT om advies: vrijwillig of verplicht evacueren?",
-    triggerTime: 1620,
+      "Het ziekenhuis en het aangrenzende zorgcentrum in Limborgum liggen in de potentiële overstromingszone. Het zorgcentrum heeft 90 bewoners, van wie 35 bedlegerig zijn. Het ziekenhuis heeft 12 IC-patiënten. Evacuatie kost veel tijd en is medisch riskant. Niet evacueren is ook riskant als het water komt.\n\nGHOR: hoeveel slachtoffers worden verwacht? Is medische capaciteit elders beschikbaar?",
+    triggerTime: 900,
+    targetRole: "GHOR",
+  },
+  {
+    title: "18:45 — Scholen lopen leeg, chaos op de wegen",
+    content:
+      "Ouders halen massaal hun kinderen op van de basisschool en middelbare school in Limborgum. Dit veroorzaakt verkeerschaos op de evacuatieroutes. Tegelijkertijd proberen hulpdiensten diezelfde wegen te gebruiken. De scholen zijn inmiddels leeg maar het verkeer staat vast.\n\nOvD-P: hoe regel je de verkeersstromen? Moeten wegen worden afgesloten of juist vrijgehouden?",
+    triggerTime: 1200,
+    targetRole: "OvD-P",
+  },
+  {
+    title: "21:02 — BESLISMOMENT: Geforceerde evacuatie & GRIP 3",
+    content:
+      "De situatie is niet meer beheersbaar op GRIP 2 niveau. De burgemeester overweegt een verplicht evacuatiebevel voor de gehele risicozone. Dit raakt circa 4.200 inwoners. Tegelijkertijd wordt opschaling naar GRIP 3 overwogen — de Commissaris van de Koning wordt geïnformeerd.\n\nROL: wanneer schaal je op? Wat heeft prioriteit: dijkversterking of evacuatie? Geef een duidelijk besluit.",
+    triggerTime: 1500,
+    targetRole: "ROL",
+  },
+
+  // ── Fase 2: GRIP 3 — Dijkdoorbraak ─────────────────────────────────────────
+  {
+    title: "03:56 — DIJKDOORBRAAK | Water stroomt Limborgum binnen",
+    content:
+      "De Maasdijk is doorgebroken. Een groot gat van circa 40 meter is ontstaan. Water stroomt met hoge snelheid de woonwijk achter de dijk binnen. Straten staan snel 50–80 cm onder water. Stroom valt deels uit. Mobiele netwerken raken overbelast. Mensen die nog in de overstromingszone waren, zitten vast.\n\nAlle eenheden: volledige opschaling. Wat zijn de prioriteiten op dit moment?",
+    triggerTime: 1800,
+    targetRole: null,
+  },
+  {
+    title: "04:30 — Opvanglocaties vol | Noodopvang nodig",
+    content:
+      "De sporthal aan de Wilhelminastraat (primaire opvanglocatie) zit vol met 280 geëvacueerden. Nog minstens 600 inwoners zoeken onderdak. Er zijn nog geen alternatieve locaties ingericht. Het historisch stadscentrum staat deels droog en wordt voorgesteld als noodopvang.\n\nBZ: welke locaties zijn beschikbaar? Hoe organiseer je opvang voor grote groepen midden in de nacht?",
+    triggerTime: 2100,
+    targetRole: "BZ",
+  },
+  {
+    title: "05:15 — Defensie aanvraag: boten voor zorgcentrum",
+    content:
+      "Het zorgcentrum is bereikbaar geworden via water. De OvD-B meldt dat reguliere evacuatiemiddelen tekort komen voor de 35 bedlegerige bewoners. Defensie beschikt over DUKW-vaartuigen en Zodiac-boten, maar formele aanvraag is vereist via de civiele autoriteiten. Inzet: minimaal 4 uur na aanvraag.\n\nDEF: wat kun je inzetten en op welke termijn? Is de aanvraag al gedaan via de juiste kanalen?",
+    triggerTime: 2400,
+    targetRole: "DEF",
+  },
+
+  // ── Fase 3: Escalatie & neveneffecten ──────────────────────────────────────
+  {
+    title: "07:00 — Brug dreigt te bezwijken",
+    content:
+      "Rijkswaterstaat meldt dat de Maasbrug aan de oostkant van Limborgum mogelijk instabiel is geworden door de waterkrachten. Dit is de enige brug die de stad verbindt met de andere oever. Afsluiting snijdt de aanvoerroute voor hulpdiensten af — maar openhouding riskeert een instorting.\n\nRWS: wat is jouw advies? Afsluiten of openhouden?",
+    triggerTime: 2700,
+    targetRole: "RWS",
+  },
+  {
+    title: "08:30 — Misinformatie & NL-Alert discussie",
+    content:
+      "Op sociale media circuleert het bericht dat het drinkwater in Limborgum besmet is door het overstromingswater. Dit is onbevestigd maar zorgt voor massale onrust. Tegelijkertijd vragen meerdere media om een officieel statement. Er is nog geen NL-Alert verstuurd met actuele informatie.\n\nCOM: wat communiceer je nu? Hoe ga je om met onrust zonder alles zeker te weten?",
+    triggerTime: 3000,
+    targetRole: "COM",
+  },
+  {
+    title: "09:45 — Plunderingen in verlaten wijken",
+    content:
+      "Politie ontvangt meldingen van plunderingen in verlaten woonwijken in de overstromingszone. Een groep van circa 20 personen is gesignaleerd in de Rembrandtstraat. Inzet van politie in het overstromingsgebied is gevaarlijk en vraagt om specifieke middelen.\n\nOvD-P: hoe handel je dit? Zet je eenheden in het water in? Wat is de prioriteit tegenover andere politietaken?",
+    triggerTime: 3300,
+    targetRole: "OvD-P",
+  },
+  {
+    title: "11:00 — BESLISMOMENT: Nationale crisisstructuur?",
+    content:
+      "De schade in Limborgum overstijgt de capaciteit van de veiligheidsregio. De provinciale crisisorganisatie is al actief. Er wordt overwogen om de nationale crisisstructuur (NCTV/ministerieel) te activeren. Dit brengt extra capaciteit en middelen, maar ook minder lokale regie.\n\nROL: adviseer de burgemeester. Ga je voor nationale activering of houd je regie lokaal?",
+    triggerTime: 3600,
     targetRole: "ROL",
   },
 ];

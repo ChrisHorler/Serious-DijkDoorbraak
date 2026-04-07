@@ -94,8 +94,12 @@ export default function EditorMap({
 }: EditorMapProps) {
     const center: [number, number] = [lat, lng];
 
-    const floodZone = previewPhase?.floodZoneScale != null
-        ? makeFloodZone(previewPhase.floodZoneScale, center)
+    const floodZone = previewPhase
+        ? (previewPhase.floodZoneCoordinates != null && previewPhase.floodZoneCoordinates.length >= 3
+            ? { id: 'flood_zone', type: 'flood_zone' as const, label: 'Overstromingsgebied', color: '#3b82f6', kind: 'polygon' as const, coordinates: previewPhase.floodZoneCoordinates }
+            : previewPhase.floodZoneScale != null
+                ? makeFloodZone(previewPhase.floodZoneScale, center)
+                : null)
         : null;
 
     const allOverlays: MapOverlay[] = customOverlays;

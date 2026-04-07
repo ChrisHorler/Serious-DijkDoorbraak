@@ -87,13 +87,23 @@ export const STATIC_OVERLAYS: MapOverlay[] = [
 ];
 
 /**
- * Returns the flood zone overlay for phases 0..upToIndex (most recent non-null scale).
+ * Returns the flood zone overlay for phases 0..upToIndex (most recent non-null specification).
+ * Custom coordinates take priority over scale presets when set.
  * Static/custom overlays are managed live by the admin during the session, not by phases.
  */
 export function getPhaseFloodOverlay(phases: EscalationPhase[], upToIndex: number, center?: [number, number]): MapOverlay | null {
-    let latestScale: number | null = null;
+    type FloodSpec = { type: 'coords'; coords: [number, number][] } | { type: 'scale'; scale: number };
+    let latest: FloodSpec | null = null;
     for (let i = 0; i <= upToIndex; i++) {
-        if (phases[i].floodZoneScale !== null) latestScale = phases[i].floodZoneScale;
+        if (phases[i].floodZoneCoordinates != null && phases[i].floodZoneCoordinates!.length >= 3) {
+            latest = { type: 'coords', coords: phases[i].floodZoneCoordinates! };
+        } else if (phases[i].floodZoneScale !== null) {
+            latest = { type: 'scale', scale: phases[i].floodZoneScale! };
+        }
     }
-    return latestScale !== null ? makeFloodZone(latestScale, center) : null;
+    if (!latest) return null;
+    if (latest.type === 'coords') {
+        return { id: 'flood_zone', type: 'flood_zone', label: 'Overstromingsgebied', color: '#3b82f6', kind: 'polygon', coordinates: latest.coords };
+    }
+    return makeFloodZone(latest.scale, center);
 }

@@ -40,7 +40,8 @@ export interface FeedbackItem {
 export interface EscalationPhase {
     id: string;
     name: string;
-    floodZoneScale: number | null; // null = no flood zone; 0.5=klein, 1.0=middel, 1.8=groot
+    floodZoneScale: number | null;              // null = no change; 0.5=klein, 1.0=middel, 1.8=groot
+    floodZoneCoordinates: [number, number][] | null; // custom drawn flood zone; overrides floodZoneScale when set
     activeOverlayIds: string[];    // ids of STATIC_OVERLAYS to include
     injectId: string | null;
 }

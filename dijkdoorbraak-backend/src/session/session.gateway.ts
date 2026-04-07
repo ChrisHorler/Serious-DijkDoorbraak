@@ -71,7 +71,13 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
   ) {
     try {
       const session = await this.sessionService.updateStatus(data.sessionId, SessionStatus.RUNNING);
-      this.server.to(data.sessionId).emit('scenario_started', { session });
+      const startData = await this.sessionService.getScenarioStartData(session.scenarioId);
+      this.server.to(data.sessionId).emit('scenario_started', {
+        session,
+        incidentLat: startData.incidentLat,
+        incidentLng: startData.incidentLng,
+        feedbackQuestions: startData.feedbackQuestions,
+      });
       return { success: true, session };
     } catch (error) {
       return { success: false, message: error.message };
