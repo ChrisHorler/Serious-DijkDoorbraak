@@ -9,7 +9,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:300
 
 export default function LobbyPage() {
   const router = useRouter();
-  const { player, session, lobbyPlayers, setLobbyPlayers, setPlayer, setIncidentLocation, setFeedbackQuestions } = useGameStore();
+  const { player, session, lobbyPlayers, setLobbyPlayers, setPlayer, setIncidentLocation, setFeedbackQuestions, setOverlays } = useGameStore();
   const hasJoined = useRef(false);
 
   useEffect(() => {
@@ -35,6 +35,7 @@ export default function LobbyPage() {
     });
 
     socket.on('scenario_started', (data: { incidentLat?: number; incidentLng?: number; feedbackQuestions?: any[] }) => {
+      setOverlays([]); // clear any overlays from a previous session
       if (data?.incidentLat != null && data?.incidentLng != null) {
         setIncidentLocation([data.incidentLat, data.incidentLng]);
       }

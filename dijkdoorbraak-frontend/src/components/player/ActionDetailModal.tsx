@@ -12,10 +12,12 @@ export interface ActionDetails {
     urgency: Urgency;
     location: [number, number] | null;
     detail: string;
+    customText?: string; // only set when isCustom=true
 }
 
 interface Props {
     abilityName: string;
+    isCustom?: boolean; // when true, shows a text input for the action description
     onSubmit: (details: ActionDetails) => void;
     onCancel: () => void;
 }
@@ -26,11 +28,12 @@ const URGENCY_OPTIONS: { value: Urgency; label: string; color: string; active: s
     { value: 'high',   label: 'Hoog',   color: 'border-gray-200 text-gray-600',   active: 'border-red-500 bg-red-50 text-red-700 font-semibold' },
 ];
 
-export default function ActionDetailModal({ abilityName, onSubmit, onCancel }: Props) {
+export default function ActionDetailModal({ abilityName, isCustom = false, onSubmit, onCancel }: Props) {
     const { overlays, incidentLocation } = useGameStore();
     const [urgency, setUrgency] = useState<Urgency>('medium');
     const [location, setLocation] = useState<[number, number] | null>(null);
     const [detail, setDetail] = useState('');
+    const [customText, setCustomText] = useState('');
     const [showMap, setShowMap] = useState(false);
 
     return (
@@ -50,6 +53,24 @@ export default function ActionDetailModal({ abilityName, onSubmit, onCancel }: P
 
                 {/* Scrollable body */}
                 <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+
+                    {/* Custom action text input */}
+                    {isCustom && (
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-700">
+                                Wat ga je doen? <span className="text-red-400">*</span>
+                            </label>
+                            <textarea
+                                value={customText}
+                                onChange={(e) => setCustomText(e.target.value)}
+                                placeholder="Beschrijf je actie..."
+                                rows={2}
+                                maxLength={150}
+                                autoFocus
+                                className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                            />
+                        </div>
+                    )}
 
                     {/* Urgency */}
                     <div className="space-y-2">
@@ -129,8 +150,9 @@ export default function ActionDetailModal({ abilityName, onSubmit, onCancel }: P
                 {/* Footer */}
                 <div className="px-5 py-4 border-t border-gray-100 shrink-0">
                     <button
-                        onClick={() => onSubmit({ urgency, location, detail: detail.trim() })}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-3 text-sm transition"
+                        onClick={() => onSubmit({ urgency, location, detail: detail.trim(), customText: isCustom ? customText.trim() : undefined })}
+                        disabled={isCustom && !customText.trim()}
+                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl py-3 text-sm transition"
                     >
                         Actie indienen
                     </button>

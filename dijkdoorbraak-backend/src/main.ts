@@ -227,6 +227,22 @@ async function bootstrap() {
       }
     });
 
+    socket.on('fire_custom_inject', async (data: { sessionId: string; title: string; content: string; targetRole: string | null }, callback) => {
+      if (!socket.data.isAdmin) return callback?.({ success: false, message: 'Unauthorized' });
+      try {
+        const inject = {
+          id: crypto.randomUUID(),
+          title: data.title,
+          content: data.content,
+          targetRole: data.targetRole || null,
+        };
+        await scenarioEngine.fireInject(data.sessionId, inject);
+        if (callback) callback({ success: true });
+      } catch (error) {
+        if (callback) callback({ success: false, message: error.message });
+      }
+    });
+
     socket.on('set_overlays', (data: { sessionId: string; overlays: any[] }, callback) => {
       if (!socket.data.isAdmin) return callback?.({ success: false, message: 'Unauthorized' });
       io.to(data.sessionId).emit('overlays_set', { overlays: data.overlays });

@@ -10,6 +10,7 @@ export default function AbilityMenu() {
     const [submitted, setSubmitted] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [pendingAbility, setPendingAbility] = useState<{ id: string; name: string } | null>(null);
+    const [pendingCustom, setPendingCustom] = useState(false);
     const { player, session, setPendingPin } = useGameStore();
 
     const abilities = player?.role?.abilities ?? [];
@@ -17,6 +18,11 @@ export default function AbilityMenu() {
     function openDetail(abilityId: string, abilityName: string) {
         setOpen(false);
         setPendingAbility({ id: abilityId, name: abilityName });
+    }
+
+    function openCustom() {
+        setOpen(false);
+        setPendingCustom(true);
     }
 
     function submitAbility(details: ActionDetails) {
@@ -47,14 +53,52 @@ export default function AbilityMenu() {
         });
     }
 
+    function submitCustom(details: ActionDetails) {
+        if (!details.customText || submitting) return;
+        setSubmitting(true);
+        const socket = getSocket();
+        socket.emit('submit_action', {
+            playerId: player?.id,
+            sessionId: session?.id,
+            customAction: details.customText,
+            actionUrgency: details.urgency,
+            actionLat: details.location?.[0] ?? null,
+            actionLng: details.location?.[1] ?? null,
+            actionDetail: details.detail || null,
+        }, (res: any) => {
+            setSubmitting(false);
+            if (res.success) {
+                if (details.location && res.decision?.id) {
+                    setPendingPin({ decisionId: res.decision.id, lat: details.location[0], lng: details.location[1] });
+                }
+                setSubmitted(details.customText!);
+                setTimeout(() => setSubmitted(null), 3000);
+                setPendingCustom(false);
+            } else {
+                setPendingCustom(false);
+                alert(res.message ?? 'Actie mislukt. Probeer het opnieuw.');
+            }
+        });
+    }
+
     return (
         <>
-            {/* Action detail modal */}
+            {/* Ability detail modal */}
             {pendingAbility && (
                 <ActionDetailModal
                     abilityName={pendingAbility.name}
                     onSubmit={submitAbility}
                     onCancel={() => setPendingAbility(null)}
+                />
+            )}
+
+            {/* Custom action modal */}
+            {pendingCustom && (
+                <ActionDetailModal
+                    abilityName="Vrije actie"
+                    isCustom
+                    onSubmit={submitCustom}
+                    onCancel={() => setPendingCustom(false)}
                 />
             )}
 
@@ -80,7 +124,7 @@ export default function AbilityMenu() {
                                 key={ability.id}
                                 onClick={() => openDetail(ability.id, ability.name)}
                                 disabled={submitting}
-                                className="w-full text-left px-4 py-3 text-gray-800 text-sm hover:bg-blue-50 hover:text-blue-700 border-b border-gray-100 last:border-0 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full text-left px-4 py-3 text-gray-800 text-sm hover:bg-blue-50 hover:text-blue-700 border-b border-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <span className="font-medium">{ability.name}</span>
                                 {ability.description && (
@@ -88,6 +132,15 @@ export default function AbilityMenu() {
                                 )}
                             </button>
                         ))}
+                        {/* Custom / free action */}
+                        <button
+                            onClick={openCustom}
+                            disabled={submitting}
+                            className="w-full text-left px-4 py-3 text-gray-500 text-sm hover:bg-gray-50 hover:text-gray-800 border-t border-dashed border-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span className="font-medium">✏ Vrije actie</span>
+                            <p className="text-gray-400 text-xs mt-0.5">Iets wat niet op de lijst staat</p>
+                        </button>
                     </div>
                 </div>
             )}

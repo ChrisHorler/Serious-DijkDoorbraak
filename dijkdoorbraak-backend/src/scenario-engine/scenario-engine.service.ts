@@ -37,15 +37,17 @@ export class ScenarioEngineService {
     console.log(`Firing inject "${inject.title}" for session ${sessionId}`);
 
     if (inject.targetRole) {
-      // Deliver only to players with matching targetRole
+      // Deliver only to players with matching role — emit to each player's socket directly
       const players = await this.playerService.getPlayerInSession(sessionId);
       const targets = players.filter((p) => p.role?.shortName === inject.targetRole);
 
       for (const player of targets) {
-        this.io.to(sessionId).emit("inject_received", {
-          playerId: player.id,
-          inject,
-        });
+        if (player.socketId) {
+          this.io.to(player.socketId).emit("inject_received", {
+            playerId: player.id,
+            inject,
+          });
+        }
       }
     } else {
       this.io.to(sessionId).emit("inject_received", { inject });

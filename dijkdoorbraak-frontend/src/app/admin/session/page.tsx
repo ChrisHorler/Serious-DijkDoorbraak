@@ -33,6 +33,10 @@ export default function AdminSessionPage() {
     const [responseScore, setResponseScore] = useState('');
     const [selectedInject, setSelectedInject] = useState('');
     const [stopping, setStopping] = useState(false);
+    const [injectTab, setInjectTab] = useState<'preset' | 'custom'>('preset');
+    const [customInjectTitle, setCustomInjectTitle] = useState('');
+    const [customInjectContent, setCustomInjectContent] = useState('');
+    const [customInjectRole, setCustomInjectRole] = useState('');
     const [sessionEnded, setSessionEnded] = useState(false);
     const [feedbackOpen, setFeedbackOpen] = useState(false);
     const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
@@ -118,6 +122,27 @@ export default function AdminSessionPage() {
         const socket = getSocket();
         socket.emit('fire_inject', { sessionId: session.id, injectId: selectedInject }, () => {
             setSelectedInject('');
+        });
+    }
+
+    function fireCustomInject() {
+        if (!session || !customInjectTitle.trim() || !customInjectContent.trim()) return;
+        if (customInjectRole) {
+            const hasMatchingPlayer = players.some((p) => p.role?.shortName === customInjectRole);
+            if (!hasMatchingPlayer && !window.confirm(`Waarschuwing: geen deelnemer heeft de rol "${customInjectRole}". De inject wordt aan niemand verstuurd. Toch versturen?`)) {
+                return;
+            }
+        }
+        const socket = getSocket();
+        socket.emit('fire_custom_inject', {
+            sessionId: session.id,
+            title: customInjectTitle.trim(),
+            content: customInjectContent.trim(),
+            targetRole: customInjectRole || null,
+        }, () => {
+            setCustomInjectTitle('');
+            setCustomInjectContent('');
+            setCustomInjectRole('');
         });
     }
 
@@ -344,34 +369,98 @@ export default function AdminSessionPage() {
                         )}
                     </div>
 
-                    {/* Manual inject trigger — hidden after session ends */}
+                    {/* Inject trigger panel — hidden after session ends */}
                     {!sessionEnded && (
-                        <div className="shrink-0 bg-white border border-gray-200 rounded-xl p-4 flex gap-3 items-end shadow-sm">
-                            <div className="flex-1">
-                                <label className="text-gray-500 text-xs uppercase tracking-widest block mb-1">
-                                    Inject handmatig sturen
-                                </label>
-                                <select
-                                    value={selectedInject}
-                                    onChange={(e) => setSelectedInject(e.target.value)}
-                                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        <div className="shrink-0 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                            {/* Tabs */}
+                            <div className="flex border-b border-gray-200">
+                                <button
+                                    onClick={() => setInjectTab('preset')}
+                                    className={`flex-1 py-2 text-xs font-semibold transition ${injectTab === 'preset' ? 'bg-white text-blue-600 border-b-2 border-blue-600' : 'bg-gray-50 text-gray-500 hover:text-gray-700'}`}
                                 >
-                                    <option value="">Selecteer inject...</option>
-                                    {injects.map((inject: Inject) => (
-                                        <option key={inject.id} value={inject.id}>
-                                            T+{inject.triggerTime}s — {inject.title}
-                                            {inject.targetRole ? ` (${inject.targetRole})` : ''}
-                                        </option>
-                                    ))}
-                                </select>
+                                    Inject versturen
+                                </button>
+                                <button
+                                    onClick={() => setInjectTab('custom')}
+                                    className={`flex-1 py-2 text-xs font-semibold transition ${injectTab === 'custom' ? 'bg-white text-blue-600 border-b-2 border-blue-600' : 'bg-gray-50 text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    Vrije inject
+                                </button>
                             </div>
-                            <button
-                                onClick={fireInject}
-                                disabled={!selectedInject}
-                                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-lg px-4 py-2 text-sm transition shrink-0"
-                            >
-                                Verstuur
-                            </button>
+
+                            {/* Preset inject */}
+                            {injectTab === 'preset' && (
+                                <div className="p-4 flex gap-3 items-end">
+                                    <div className="flex-1">
+                                        <label className="text-gray-500 text-xs uppercase tracking-widest block mb-1">Inject handmatig sturen</label>
+                                        <select
+                                            value={selectedInject}
+                                            onChange={(e) => setSelectedInject(e.target.value)}
+                                            className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                        >
+                                            <option value="">Selecteer inject...</option>
+                                            {injects.map((inject: Inject) => (
+                                                <option key={inject.id} value={inject.id}>
+                                                    T+{inject.triggerTime}s — {inject.title}
+                                                    {inject.targetRole ? ` (${inject.targetRole})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <button
+                                        onClick={fireInject}
+                                        disabled={!selectedInject}
+                                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-lg px-4 py-2 text-sm transition shrink-0"
+                                    >
+                                        Verstuur
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Custom / ad-hoc inject */}
+                            {injectTab === 'custom' && (
+                                <div className="p-4 space-y-2">
+                                    <div className="flex gap-2">
+                                        <input
+                                            value={customInjectTitle}
+                                            onChange={(e) => setCustomInjectTitle(e.target.value)}
+                                            placeholder="Titel"
+                                            className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                        />
+                                        <select
+                                            value={customInjectRole}
+                                            onChange={(e) => setCustomInjectRole(e.target.value)}
+                                            className="w-36 bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-gray-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                        >
+                                            <option value="">Iedereen</option>
+                                            {players
+                                                .filter((p) => p.role)
+                                                .map((p) => p.role!.shortName)
+                                                .filter((v, i, arr) => arr.indexOf(v) === i)
+                                                .map((shortName) => (
+                                                    <option key={shortName} value={shortName}>{shortName}</option>
+                                                ))
+                                            }
+                                        </select>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <textarea
+                                            value={customInjectContent}
+                                            onChange={(e) => setCustomInjectContent(e.target.value)}
+                                            placeholder="Bericht..."
+                                            rows={2}
+                                            className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                                        />
+                                        <button
+                                            onClick={fireCustomInject}
+                                            disabled={!customInjectTitle.trim() || !customInjectContent.trim()}
+                                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-lg px-4 py-2 text-sm transition shrink-0 self-end"
+                                        >
+                                            Verstuur
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
