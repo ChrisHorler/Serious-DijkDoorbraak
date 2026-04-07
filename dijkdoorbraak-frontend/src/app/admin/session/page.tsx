@@ -8,6 +8,7 @@ import type { PendingActionPin } from '@/components/admin/AdminMap';
 import { connectAdminSocket, getSocket } from '@/lib/socket';
 import { Inject } from '@/lib/store';
 import { getPhaseFloodOverlay } from '@/lib/overlayPresets';
+import { INJECT_VARIANT_STYLES, type InjectVariant } from '@/lib/store';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
@@ -37,6 +38,7 @@ export default function AdminSessionPage() {
     const [customInjectTitle, setCustomInjectTitle] = useState('');
     const [customInjectContent, setCustomInjectContent] = useState('');
     const [customInjectRole, setCustomInjectRole] = useState('');
+    const [customInjectVariant, setCustomInjectVariant] = useState<InjectVariant>('alert');
     const [sessionEnded, setSessionEnded] = useState(false);
     const [feedbackOpen, setFeedbackOpen] = useState(false);
     const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
@@ -139,10 +141,12 @@ export default function AdminSessionPage() {
             title: customInjectTitle.trim(),
             content: customInjectContent.trim(),
             targetRole: customInjectRole || null,
+            variant: customInjectVariant,
         }, () => {
             setCustomInjectTitle('');
             setCustomInjectContent('');
             setCustomInjectRole('');
+            setCustomInjectVariant('alert');
         });
     }
 
@@ -212,6 +216,14 @@ export default function AdminSessionPage() {
 
     function dismissPin(pinId: string) {
         setPendingPins((prev) => prev.filter((p) => p.id !== pinId));
+    }
+
+    function handleRemoveOverlay(id: string) {
+        if (!session) return;
+        const updated = overlays.filter((o) => o.id !== id);
+        const socket = getSocket();
+        socket.emit('set_overlays', { sessionId: session.id, overlays: updated }, () => {});
+        setOverlays(updated);
     }
 
     const pendingCustomActions = decisions.filter(
@@ -360,6 +372,7 @@ export default function AdminSessionPage() {
                                 sessionId={session.id}
                                 overlays={overlays}
                                 onToggleOverlay={addOverlay}
+                                onRemoveOverlay={handleRemoveOverlay}
                                 center={incidentLocation ?? undefined}
                                 customOverlays={scenarioCustomOverlays}
                                 pendingPins={pendingPins}
@@ -420,6 +433,18 @@ export default function AdminSessionPage() {
                             {/* Custom / ad-hoc inject */}
                             {injectTab === 'custom' && (
                                 <div className="p-4 space-y-2">
+                                    {/* Variant picker */}
+                                    <div className="flex gap-1 flex-wrap">
+                                        {(Object.entries(INJECT_VARIANT_STYLES) as [InjectVariant, typeof INJECT_VARIANT_STYLES[InjectVariant]][]).map(([key, s]) => (
+                                            <button
+                                                key={key}
+                                                onClick={() => setCustomInjectVariant(key)}
+                                                className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-medium transition ${customInjectVariant === key ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-800'}`}
+                                            >
+                                                <span>{s.icon}</span>{s.label}
+                                            </button>
+                                        ))}
+                                    </div>
                                     <div className="flex gap-2">
                                         <input
                                             value={customInjectTitle}

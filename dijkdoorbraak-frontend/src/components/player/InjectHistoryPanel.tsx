@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useGameStore, Inject } from '@/lib/store';
+import { useGameStore, Inject, INJECT_VARIANT_STYLES } from '@/lib/store';
 
 export default function InjectHistoryPanel() {
     const { injects, setActiveInject } = useGameStore();
@@ -52,7 +52,9 @@ export default function InjectHistoryPanel() {
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-100">
-                                {sorted.map((inject: Inject, idx) => (
+                                {sorted.map((inject: Inject, idx) => {
+                                    const v = INJECT_VARIANT_STYLES[inject.variant ?? 'alert'];
+                                    return (
                                     <div key={inject.id} className="px-5 py-4">
                                         {/* Collapsed header */}
                                         <button
@@ -60,9 +62,10 @@ export default function InjectHistoryPanel() {
                                             onClick={() => setExpanded(expanded === inject.id ? null : inject.id)}
                                         >
                                             <div className="flex items-start gap-3">
-                                                <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5 shrink-0" />
+                                                <div className={`w-2 h-2 rounded-full ${v.accentDot} mt-1.5 shrink-0`} />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="text-sm leading-none">{v.icon}</span>
                                                         <p className="font-semibold text-gray-900 text-sm">{inject.title}</p>
                                                         {inject.targetRole && (
                                                             <span className="bg-blue-100 text-blue-700 text-xs font-mono px-2 py-0.5 rounded-full">
@@ -91,7 +94,8 @@ export default function InjectHistoryPanel() {
                                             </div>
                                         )}
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

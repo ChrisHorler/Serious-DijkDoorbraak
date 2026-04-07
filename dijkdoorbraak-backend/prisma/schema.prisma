@@ -28,6 +28,7 @@ model Inject {
   content     String
   triggerTime Int
   targetRole  String?
+  variant     String     @default("alert")
   decisions   Decision[]
   createdAt   DateTime   @default(now())
 }

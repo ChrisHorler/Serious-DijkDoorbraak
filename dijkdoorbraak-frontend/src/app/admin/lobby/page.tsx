@@ -40,6 +40,7 @@ export default function AdminLobbyPage() {
         injects, setInjects,
         phases, setPhases, setCurrentPhaseIndex,
         incidentLocation, setIncidentLocation, setScenarioCustomOverlays,
+        setOverlays,
     } = useAdminStore();
 
     function abandonSession() {
@@ -123,6 +124,7 @@ export default function AdminLobbyPage() {
             setIncidentLocation(null);
         }
 
+        setOverlays([]);
         setSession(newSession);
         setPlayers([]);
         setCurrentPhaseIndex(-1);

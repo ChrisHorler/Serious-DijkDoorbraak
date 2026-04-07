@@ -31,12 +31,76 @@ export interface FeedbackQuestion {
     order: number;
 }
 
+export type InjectVariant = 'alert' | 'warning' | 'info' | 'nl-alert';
+
+export interface InjectVariantStyle {
+    label: string;
+    icon: string;
+    // Toast (dark overlay notification)
+    toastBg: string;
+    toastBorder: string;
+    toastLabelColor: string;
+    toastSubColor: string;
+    toastDot: string;
+    // Modal + history dot
+    accentDot: string;
+    accentLabel: string;
+}
+
+export const INJECT_VARIANT_STYLES: Record<InjectVariant, InjectVariantStyle> = {
+    alert: {
+        label: 'Incident melding',
+        icon: '🚨',
+        toastBg: 'bg-red-900/95',
+        toastBorder: 'border-red-600',
+        toastLabelColor: 'text-red-300',
+        toastSubColor: 'text-red-200',
+        toastDot: 'bg-red-400',
+        accentDot: 'bg-red-500',
+        accentLabel: 'text-red-600',
+    },
+    warning: {
+        label: 'Waarschuwing',
+        icon: '⚠️',
+        toastBg: 'bg-amber-900/95',
+        toastBorder: 'border-amber-600',
+        toastLabelColor: 'text-amber-300',
+        toastSubColor: 'text-amber-200',
+        toastDot: 'bg-amber-400',
+        accentDot: 'bg-amber-500',
+        accentLabel: 'text-amber-600',
+    },
+    info: {
+        label: 'Informatie',
+        icon: 'ℹ️',
+        toastBg: 'bg-blue-900/95',
+        toastBorder: 'border-blue-500',
+        toastLabelColor: 'text-blue-300',
+        toastSubColor: 'text-blue-200',
+        toastDot: 'bg-blue-400',
+        accentDot: 'bg-blue-500',
+        accentLabel: 'text-blue-600',
+    },
+    'nl-alert': {
+        label: 'NL-Alert',
+        icon: '📱',
+        toastBg: 'bg-orange-500',
+        toastBorder: 'border-orange-300',
+        toastLabelColor: 'text-orange-100',
+        toastSubColor: 'text-orange-100',
+        toastDot: 'bg-white',
+        accentDot: 'bg-orange-500',
+        accentLabel: 'text-orange-600',
+    },
+};
+
 export interface Inject {
     id: string;
     title: string;
     content: string;
     targetRole: string | null;
     triggerTime: number;
+    variant?: InjectVariant;
 }
 
 export interface Session {

@@ -28,6 +28,7 @@ interface AdminMapProps {
     sessionId: string;
     overlays: MapOverlay[];
     onToggleOverlay: (overlay: MapOverlay) => void;
+    onRemoveOverlay?: (id: string) => void;
     center?: [number, number];
     customOverlays?: MapOverlay[];
     pendingPins?: PendingActionPin[];
@@ -35,7 +36,7 @@ interface AdminMapProps {
     onDismissPin?: (pinId: string) => void;
 }
 
-export default function AdminMap({ sessionId, overlays, onToggleOverlay, center, customOverlays = [], pendingPins = [], onPublishPin, onDismissPin }: AdminMapProps) {
+export default function AdminMap({ sessionId, overlays, onToggleOverlay, onRemoveOverlay, center, customOverlays = [], pendingPins = [], onPublishPin, onDismissPin }: AdminMapProps) {
     const mapCenter = center ?? INCIDENT_LOCATION;
     const OVERLAY_PRESETS: MapOverlay[] = customOverlays;
     const activeIds = new Set(overlays.map((o) => o.id));
@@ -154,6 +155,36 @@ export default function AdminMap({ sessionId, overlays, onToggleOverlay, center,
                             </button>
                         );
                     })}
+                </div>
+            )}
+
+            {/* Active overlays list with remove buttons */}
+            {overlays.length > 0 && onRemoveOverlay && (
+                <div className="shrink-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    <p className="text-gray-400 text-xs uppercase tracking-widest px-3 py-2 border-b border-gray-100 bg-gray-50">
+                        Actieve lagen ({overlays.length})
+                    </p>
+                    <div className="max-h-36 overflow-y-auto divide-y divide-gray-100">
+                        {overlays.map((o) => (
+                            <div key={o.id} className="flex items-center gap-2 px-3 py-2">
+                                <span
+                                    className="shrink-0 inline-block w-2.5 h-2.5 rounded-full"
+                                    style={{ backgroundColor: o.color }}
+                                />
+                                {o.kind === 'marker' && o.icon && (
+                                    <span className="text-sm leading-none shrink-0">{o.icon}</span>
+                                )}
+                                <span className="flex-1 text-gray-700 text-xs truncate">{o.label}</span>
+                                <button
+                                    onClick={() => onRemoveOverlay(o.id)}
+                                    className="shrink-0 text-gray-300 hover:text-red-500 text-xs transition px-1"
+                                    title="Verwijder van kaart"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

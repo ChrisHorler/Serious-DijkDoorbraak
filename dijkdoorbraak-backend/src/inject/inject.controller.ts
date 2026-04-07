@@ -12,6 +12,7 @@ export class InjectController {
     content: string;
     triggerTime: number;
     targetRole?: string;
+    variant?: string;
   }) {
     return this.injectService.createInject(body);
   }
@@ -29,7 +30,7 @@ export class InjectController {
   @Patch(":id")
   update(
     @Param("id") id: string,
-    @Body() body: { title?: string; content?: string; triggerTime?: number; targetRole?: string | null },
+    @Body() body: { title?: string; content?: string; triggerTime?: number; targetRole?: string | null; variant?: string },
   ) {
     return this.injectService.updateInject(id, body);
   }

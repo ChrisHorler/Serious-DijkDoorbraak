@@ -11,6 +11,7 @@ export class InjectService {
     content: string;
     triggerTime: number;
     targetRole?: string;
+    variant?: string;
   }) {
     const scenario = await this.prisma.db.scenario.findUnique({
       where: { id: data.scenarioId },
@@ -41,6 +42,7 @@ export class InjectService {
     content?: string;
     triggerTime?: number;
     targetRole?: string | null;
+    variant?: string;
   }) {
     return this.prisma.db.inject.update({ where: { id }, data });
   }

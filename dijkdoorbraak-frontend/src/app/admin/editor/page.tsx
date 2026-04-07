@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useAdminStore, EscalationPhase } from '@/lib/adminStore';
 import { INCIDENT_LOCATION, FLOOD_SIZES } from '@/lib/overlayPresets';
+import { INJECT_VARIANT_STYLES, type InjectVariant } from '@/lib/store';
 import type { MapOverlay } from '@/lib/store';
 import type { DrawMode } from '@/components/admin/EditorMap';
 
@@ -36,6 +37,7 @@ interface Inject {
     content: string;
     triggerTime: number;
     targetRole: string | null;
+    variant: string;
 }
 
 interface Scenario {
@@ -104,7 +106,7 @@ export default function EditorPage() {
     const [savingScenario, setSavingScenario] = useState(false);
 
     // ── Injects ────────────────────────────────────────────────────
-    const [injectForm, setInjectForm] = useState({ title: '', content: '', triggerTime: '', targetRole: '' });
+    const [injectForm, setInjectForm] = useState({ title: '', content: '', triggerTime: '', targetRole: '', variant: 'alert' });
     const [editingInject, setEditingInject] = useState<Inject | null>(null);
     const [savingInject, setSavingInject] = useState(false);
 
@@ -233,13 +235,13 @@ export default function EditorPage() {
             await fetch(`${BACKEND_URL}/injects/${editingInject.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: injectForm.title, content: injectForm.content, triggerTime: Number(injectForm.triggerTime), targetRole: injectForm.targetRole || null }),
+                body: JSON.stringify({ title: injectForm.title, content: injectForm.content, triggerTime: Number(injectForm.triggerTime), targetRole: injectForm.targetRole || null, variant: injectForm.variant }),
             });
         } else {
             await fetch(`${BACKEND_URL}/injects`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ scenarioId: selectedScenario.id, title: injectForm.title, content: injectForm.content, triggerTime: Number(injectForm.triggerTime), targetRole: injectForm.targetRole || null }),
+                body: JSON.stringify({ scenarioId: selectedScenario.id, title: injectForm.title, content: injectForm.content, triggerTime: Number(injectForm.triggerTime), targetRole: injectForm.targetRole || null, variant: injectForm.variant }),
             });
         }
         cancelInjectEdit();
@@ -257,12 +259,12 @@ export default function EditorPage() {
 
     function startEditInject(inject: Inject) {
         setEditingInject(inject);
-        setInjectForm({ title: inject.title, content: inject.content, triggerTime: String(inject.triggerTime), targetRole: inject.targetRole ?? '' });
+        setInjectForm({ title: inject.title, content: inject.content, triggerTime: String(inject.triggerTime), targetRole: inject.targetRole ?? '', variant: inject.variant ?? 'alert' });
     }
 
     function cancelInjectEdit() {
         setEditingInject(null);
-        setInjectForm({ title: '', content: '', triggerTime: '', targetRole: '' });
+        setInjectForm({ title: '', content: '', triggerTime: '', targetRole: '', variant: 'alert' });
     }
 
     // ── Phase helpers ──────────────────────────────────────────────
@@ -604,6 +606,19 @@ export default function EditorPage() {
                                                         {roles.map(r => <option key={r.id} value={r.shortName}>{r.shortName} — {r.name}</option>)}
                                                     </select>
                                                 </div>
+                                                {/* Variant picker */}
+                                                <div className="flex gap-1 flex-wrap">
+                                                    {(Object.entries(INJECT_VARIANT_STYLES) as [InjectVariant, typeof INJECT_VARIANT_STYLES[InjectVariant]][]).map(([key, s]) => (
+                                                        <button
+                                                            key={key}
+                                                            type="button"
+                                                            onClick={() => setInjectForm({ ...injectForm, variant: key })}
+                                                            className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-medium transition ${injectForm.variant === key ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-800'}`}
+                                                        >
+                                                            <span>{s.icon}</span>{s.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                                 <textarea value={injectForm.content} onChange={e => setInjectForm({ ...injectForm, content: e.target.value })} placeholder="Inhoud..." rows={2}
                                                     className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none" />
                                                 <div className="flex gap-3">
@@ -622,7 +637,8 @@ export default function EditorPage() {
                                         <div className="space-y-1.5">
                                             {selectedScenario.Injects.map(inject => (
                                                 <div key={inject.id} className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 flex items-start gap-3">
-                                                    <div className="shrink-0">
+                                                    <div className="shrink-0 text-center">
+                                                        <span className="text-base leading-none">{INJECT_VARIANT_STYLES[(inject.variant as InjectVariant) ?? 'alert']?.icon ?? '🚨'}</span>
                                                         <p className="text-gray-400 text-xs font-mono">T+{inject.triggerTime}s</p>
                                                         {inject.targetRole && <p className="text-blue-600 text-xs font-mono">{inject.targetRole}</p>}
                                                     </div>

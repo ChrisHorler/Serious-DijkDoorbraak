@@ -1,18 +1,21 @@
 'use client';
 
-import { useGameStore } from "@/lib/store";
+import { useGameStore, INJECT_VARIANT_STYLES } from "@/lib/store";
 
 export default function InjectModal() {
     const { activeInject, setActiveInject } = useGameStore();
 
     if (!activeInject) return null;
 
+    const v = INJECT_VARIANT_STYLES[activeInject.variant ?? 'alert'];
+
     return (
         <div className="absolute inset-0 z-30 flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm">
             <div className="bg-white border border-gray-200 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
                 <div className="flex items-center gap-2 mb-4">
-                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                    <p className="text-red-600 text-xs uppercase tracking-widest font-medium">Incident melding</p>
+                    <div className={`w-2 h-2 rounded-full ${v.accentDot} animate-pulse`} />
+                    <span className="text-base leading-none">{v.icon}</span>
+                    <p className={`${v.accentLabel} text-xs uppercase tracking-widest font-medium`}>{v.label}</p>
                     {activeInject.targetRole && (
                         <span className="ml-auto bg-blue-100 text-blue-700 text-xs font-mono px-2 py-0.5 rounded-full">
                             → {activeInject.targetRole}

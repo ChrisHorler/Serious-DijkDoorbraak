@@ -227,7 +227,7 @@ async function bootstrap() {
       }
     });
 
-    socket.on('fire_custom_inject', async (data: { sessionId: string; title: string; content: string; targetRole: string | null }, callback) => {
+    socket.on('fire_custom_inject', async (data: { sessionId: string; title: string; content: string; targetRole: string | null; variant?: string }, callback) => {
       if (!socket.data.isAdmin) return callback?.({ success: false, message: 'Unauthorized' });
       try {
         const inject = {
@@ -235,6 +235,7 @@ async function bootstrap() {
           title: data.title,
           content: data.content,
           targetRole: data.targetRole || null,
+          variant: data.variant ?? 'alert',
         };
         await scenarioEngine.fireInject(data.sessionId, inject);
         if (callback) callback({ success: true });
