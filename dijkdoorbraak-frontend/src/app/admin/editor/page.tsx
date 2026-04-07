@@ -588,7 +588,7 @@ export default function EditorPage() {
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-500">Injects ({selectedScenario.Injects.length})</h3>
-                                            <button onClick={() => { cancelInjectEdit(); setEditingInject({ id: 'new', scenarioId: selectedScenario.id, title: '', content: '', triggerTime: 0, targetRole: null }); setInjectForm({ title: '', content: '', triggerTime: '', targetRole: '' }); }}
+                                            <button onClick={() => { cancelInjectEdit(); setEditingInject({ id: 'new', scenarioId: selectedScenario.id, title: '', content: '', triggerTime: 0, targetRole: null, variant: 'alert' }); setInjectForm({ title: '', content: '', triggerTime: '', targetRole: '', variant: 'alert' }); }}
                                                 className="text-blue-600 hover:text-blue-700 text-xs font-medium transition">+ Inject</button>
                                         </div>
 
