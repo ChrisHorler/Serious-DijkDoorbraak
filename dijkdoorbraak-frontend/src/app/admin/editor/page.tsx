@@ -89,7 +89,7 @@ function generateId(): string {
 }
 
 function newPhase(index: number): EscalationPhase {
-    return { id: generateId(), name: `Fase ${index + 1}`, floodZoneScale: null, floodZoneCoordinates: null, activeOverlayIds: [], injectId: null };
+    return { id: generateId(), name: `Fase ${index + 1}`, scenarioTime: null, floodZoneScale: null, floodZoneCoordinates: null, activeOverlayIds: [], injectId: null };
 }
 
 // ── Component ──────────────────────────────────────────────────────
@@ -720,6 +720,11 @@ export default function EditorPage() {
                                                         <span className="text-gray-400 text-xs font-mono w-4 shrink-0">{index + 1}</span>
                                                         <input value={phase.name} onChange={e => updatePhase(phase.id, { name: e.target.value })}
                                                             className="flex-1 bg-white border border-gray-300 rounded-lg px-2.5 py-1 text-gray-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                                                        <input value={phase.scenarioTime ?? ''} onChange={e => updatePhase(phase.id, { scenarioTime: e.target.value || null })}
+                                                            placeholder="tijd"
+                                                            maxLength={8}
+                                                            title="Scenario tijd (bijv. 21:02)"
+                                                            className="w-16 bg-white border border-gray-300 rounded-lg px-2 py-1 text-gray-900 text-xs font-mono text-center focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                                                         <button onClick={() => setPreviewPhaseIndex(previewPhaseIndex === index ? -1 : index)}
                                                             className={`text-xs px-2 py-1 rounded border transition shrink-0 ${previewPhaseIndex === index ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-500 hover:text-gray-900 hover:border-gray-400'}`}>
                                                             {previewPhaseIndex === index ? '● Op kaart' : 'Preview'}

@@ -65,6 +65,10 @@ export default function AdminSessionPage() {
     const [showLog, setShowLog] = useState(false);
     const [showReport, setShowReport] = useState(false);
 
+    // Scenario clock visibility toggle
+    const [clockVisible, setClockVisible] = useState(true);
+    const [currentScenarioTime, setCurrentScenarioTime] = useState<string | null>(null);
+
     // Game timer
     const [timerMs, setTimerMs] = useState<number | null>(null);
     const [timerRunning, setTimerRunning] = useState(false);
@@ -127,8 +131,9 @@ export default function AdminSessionPage() {
             setOverlays(data.overlays);
         });
 
-        socket.on('phase_changed', (data: { phaseIndex: number }) => {
+        socket.on('phase_changed', (data: { phaseIndex: number; scenarioTime?: string | null }) => {
             setCurrentPhaseIndex(data.phaseIndex);
+            if (data.scenarioTime) setCurrentScenarioTime(data.scenarioTime);
         });
 
         // Fetch existing session log (for rejoin)
@@ -220,8 +225,8 @@ export default function AdminSessionPage() {
         }
 
         setCurrentPhaseIndex(nextIndex);
-        // Notify other admins in the room of the new phase (include name for session log)
-        socket.emit('phase_changed', { sessionId: session.id, phaseIndex: nextIndex, phaseName: phases[nextIndex].name });
+        // Notify other admins + players of the new phase (name + scenario time for player display)
+        socket.emit('phase_changed', { sessionId: session.id, phaseIndex: nextIndex, phaseName: phases[nextIndex].name, scenarioTime: phases[nextIndex].scenarioTime ?? null });
     }
 
     function submitResponse(approved: boolean) {
@@ -276,6 +281,14 @@ export default function AdminSessionPage() {
         const socket = getSocket();
         socket.emit('set_overlays', { sessionId: session.id, overlays: updated }, () => {});
         setOverlays(updated);
+    }
+
+    function toggleClock() {
+        if (!session) return;
+        const next = !clockVisible;
+        setClockVisible(next);
+        const socket = getSocket();
+        socket.emit('scenario_time_update', { sessionId: session.id, scenarioTime: next ? currentScenarioTime : null });
     }
 
     function emitTimer(remainingMs: number, running: boolean) {
@@ -607,6 +620,23 @@ export default function AdminSessionPage() {
                                     + Toevoegen
                                 </button>
                             </div>
+                            {/* Scenario clock toggle — only shown when a time is set */}
+                            {currentScenarioTime && (
+                                <div className="flex items-center gap-2 border-t border-gray-100 pt-2">
+                                    <span className="text-gray-400 text-xs shrink-0">Scenario klok:</span>
+                                    <span className="font-mono text-xs text-gray-600">{currentScenarioTime}</span>
+                                    <button
+                                        onClick={toggleClock}
+                                        className={`ml-auto text-xs font-semibold px-3 py-1 rounded-lg border transition ${
+                                            clockVisible
+                                                ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                : 'bg-gray-100 border-gray-200 text-gray-400 hover:bg-gray-200'
+                                        }`}
+                                    >
+                                        {clockVisible ? '👁 Zichtbaar' : '🚫 Verborgen'}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
 

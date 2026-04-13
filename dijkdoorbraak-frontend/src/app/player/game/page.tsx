@@ -78,8 +78,13 @@ export default function GamePage() {
             setTimer(data.remainingMs, data.running);
         });
 
-        socket.on('phase_changed', (data: { phaseIndex: number; phaseName?: string | null }) => {
+        socket.on('phase_changed', (data: { phaseIndex: number; phaseName?: string | null; scenarioTime?: string | null }) => {
             setCurrentPhaseIndex(data.phaseIndex);
+            if (data.scenarioTime) setScenarioTime(data.scenarioTime);
+        });
+
+        socket.on('scenario_time_update', (data: { scenarioTime: string | null }) => {
+            setScenarioTime(data.scenarioTime);
         });
 
         socket.on('scenario_stopped', () => {
@@ -94,6 +99,7 @@ export default function GamePage() {
             socket.off('overlays_set');
             socket.off('timer_update');
             socket.off('phase_changed');
+            socket.off('scenario_time_update');
             socket.off('scenario_stopped');
         };
     }, [player, session]);
@@ -125,7 +131,7 @@ export default function GamePage() {
             {/* Map fills the screen */}
             <GameMap overlays={overlays} pendingPin={pendingPin} incidentLocation={incidentLocation} />
 
-            {/* Top-right cluster: timer + scenario time + phase */}
+            {/* Top-right cluster: timer + phase */}
             <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1.5">
                 {/* Game timer */}
                 {displayMs !== null && (
@@ -139,12 +145,6 @@ export default function GamePage() {
                         {formatTimer(displayMs)}
                     </div>
                 )}
-                {/* Scenario time badge */}
-                {scenarioTime && (
-                    <div className="bg-black/60 backdrop-blur rounded-lg px-3 py-1 text-white font-mono text-xs font-semibold shadow">
-                        🕐 {scenarioTime}
-                    </div>
-                )}
                 {/* Phase badge */}
                 {currentPhaseIndex !== null && (
                     <div className="bg-blue-600/80 backdrop-blur rounded-lg px-3 py-1 text-white text-xs font-semibold shadow">
@@ -152,6 +152,16 @@ export default function GamePage() {
                     </div>
                 )}
             </div>
+
+            {/* Scenario time clock — centered between the two bottom FABs */}
+            {scenarioTime && (
+                <div
+                    className="absolute left-1/2 -translate-x-1/2 z-20 bg-black/55 backdrop-blur rounded-lg px-3 py-1 text-white font-mono text-sm font-bold shadow tracking-widest pointer-events-none"
+                    style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
+                >
+                    {scenarioTime}
+                </div>
+            )}
 
             {/* Role badge top left — tappable to open detail */}
             {player?.role && (

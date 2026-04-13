@@ -25,8 +25,9 @@ function ScreenContent() {
     const [incidentLocation, setIncidentLocation] = useState<[number, number] | null>(null);
     const [error, setError] = useState('');
     const [connecting, setConnecting] = useState(false);
-    const [showQR, setShowQR] = useState(false);
+    const [qrMode, setQrMode] = useState<null | 'player' | 'spectator'>(null);
     const [currentPhase, setCurrentPhase] = useState<string | null>(null);
+    const [scenarioTime, setScenarioTime] = useState<string | null>(null);
 
     // Timer state
     const [timerMs, setTimerMs] = useState<number | null>(null);
@@ -66,6 +67,7 @@ function ScreenContent() {
             if (sc?.incidentLat != null && sc?.incidentLng != null) {
                 setIncidentLocation([sc.incidentLat, sc.incidentLng]);
             }
+            if (sc?.scenarioTime) setScenarioTime(sc.scenarioTime);
             if (res.currentTimer) {
                 setTimerMs(res.currentTimer.remainingMs);
                 setTimerRunning(res.currentTimer.running);
@@ -97,8 +99,13 @@ function ScreenContent() {
             }
         });
 
-        socket.on('phase_changed', (data: { phaseIndex: number; phaseName?: string | null }) => {
+        socket.on('phase_changed', (data: { phaseIndex: number; phaseName?: string | null; scenarioTime?: string | null }) => {
             if (data.phaseName) setCurrentPhase(data.phaseName);
+            if (data.scenarioTime) setScenarioTime(data.scenarioTime);
+        });
+
+        socket.on('scenario_time_update', (data: { scenarioTime: string | null }) => {
+            setScenarioTime(data.scenarioTime);
         });
 
         socket.on('scenario_stopped', () => {
@@ -108,6 +115,7 @@ function ScreenContent() {
             setTimerMs(null);
             setTimerRunning(false);
             setCurrentPhase(null);
+            setScenarioTime(null);
         });
 
         return () => {
@@ -116,6 +124,7 @@ function ScreenContent() {
             socket.off('timer_update');
             socket.off('scenario_started');
             socket.off('phase_changed');
+            socket.off('scenario_time_update');
             socket.off('scenario_stopped');
         };
     }
@@ -205,39 +214,65 @@ function ScreenContent() {
                 </div>
             )}
 
+            {/* Scenario time clock — bottom center */}
+            {scenarioTime && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 bg-black/60 backdrop-blur rounded-xl px-6 py-2 text-white font-mono text-2xl font-bold tracking-widest shadow-lg pointer-events-none">
+                    {scenarioTime}
+                </div>
+            )}
+
             {/* Session code badge — bottom right, subtle */}
             <div className="absolute bottom-4 right-4 z-10 bg-black/50 backdrop-blur rounded-lg px-3 py-1.5 text-white/60 font-mono text-xs">
                 {joinCode}
             </div>
 
-            {/* QR button — bottom left, for admin to show join QR */}
-            <button
-                onClick={() => setShowQR(true)}
-                className="absolute bottom-4 left-4 z-10 bg-black/50 backdrop-blur hover:bg-black/70 rounded-lg px-3 py-1.5 text-white/60 hover:text-white text-xs transition"
-                title="Toon QR-code voor deelnemers"
-            >
-                QR
-            </button>
+            {/* QR buttons — bottom left */}
+            <div className="absolute bottom-4 left-4 z-10 flex gap-2">
+                <button
+                    onClick={() => setQrMode('player')}
+                    className="bg-black/50 backdrop-blur hover:bg-black/70 rounded-lg px-3 py-1.5 text-white/60 hover:text-white text-xs transition"
+                    title="Toon QR-code voor deelnemers"
+                >
+                    QR Deelnemers
+                </button>
+                <button
+                    onClick={() => setQrMode('spectator')}
+                    className="bg-black/50 backdrop-blur hover:bg-black/70 rounded-lg px-3 py-1.5 text-white/60 hover:text-white text-xs transition"
+                    title="Toon QR-code voor scherm"
+                >
+                    QR Scherm
+                </button>
+            </div>
 
             {/* QR modal */}
-            {showQR && (
+            {qrMode && (
                 <div
                     className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
-                    onClick={() => setShowQR(false)}
+                    onClick={() => setQrMode(null)}
                 >
                     <div
                         className="bg-white rounded-3xl p-10 flex flex-col items-center gap-6 shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <p className="text-gray-500 text-sm uppercase tracking-widest">Deelnemen aan sessie</p>
+                        <p className="text-gray-500 text-sm uppercase tracking-widest">
+                            {qrMode === 'player' ? 'Deelnemen aan sessie' : 'Projectiescherm openen'}
+                        </p>
                         <QRCodeSVG
-                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/player/join?code=${joinCode}`}
+                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}${
+                                qrMode === 'player'
+                                    ? `/player/join?code=${joinCode}`
+                                    : `/screen?code=${joinCode}`
+                            }`}
                             size={280}
                         />
                         <p className="text-gray-900 text-5xl font-mono font-bold tracking-widest">{joinCode}</p>
-                        <p className="text-gray-400 text-sm text-center">Scan of voer de code in op je telefoon</p>
+                        <p className="text-gray-400 text-sm text-center">
+                            {qrMode === 'player'
+                                ? 'Scan of voer de code in op je telefoon'
+                                : 'Scan om het scherm te openen op een ander apparaat'}
+                        </p>
                         <button
-                            onClick={() => setShowQR(false)}
+                            onClick={() => setQrMode(null)}
                             className="text-gray-400 hover:text-gray-700 text-sm transition"
                         >
                             ✕ Sluiten

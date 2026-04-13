@@ -92,7 +92,7 @@ async function bootstrap() {
 
         if (callback) callback({ success: true, player, rejoined, currentOverlays, currentTimer });
       } catch (error) {
-        if (callback) callback({ success: false, message: error.message });
+        if (callback) callback({ success: false, message: (error as any).message });
       }
     });
 
@@ -111,7 +111,7 @@ async function bootstrap() {
 
         if (callback) callback({ success: true, player });
       } catch (error) {
-        if (callback) callback({ success: false, message: error.message });
+        if (callback) callback({ success: false, message: (error as any).message });
       }
     });
 
@@ -139,7 +139,7 @@ async function bootstrap() {
 
         if (callback) callback({ success: true, session });
       } catch (error) {
-        if (callback) callback({ success: false, message: error.message });
+        if (callback) callback({ success: false, message: (error as any).message });
       }
     });
 
@@ -163,7 +163,7 @@ async function bootstrap() {
 
         if (callback) callback({ success: true, decision });
       } catch (error) {
-        if (callback) callback({ success: false, message: error.message });
+        if (callback) callback({ success: false, message: (error as any).message });
       }
     });
 
@@ -178,7 +178,7 @@ async function bootstrap() {
         io.to(data.sessionId).emit("feedback_received", { feedback });
         if (callback) callback({ success: true });
       } catch (error) {
-        if (callback) callback({ success: false, message: error.message });
+        if (callback) callback({ success: false, message: (error as any).message });
       }
     });
 
@@ -199,7 +199,7 @@ async function bootstrap() {
 
         if (callback) callback({ success: true, decision });
       } catch (error) {
-        if (callback) callback({ success: false, message: error.message });
+        if (callback) callback({ success: false, message: (error as any).message });
       }
     });
 
@@ -268,7 +268,7 @@ async function bootstrap() {
         sessionLogService.record(data.sessionId, 'inject_fired', { title: inject.title, targetRole: inject.targetRole ?? null, variant: (inject as any).variant ?? 'alert' }).catch(() => {});
         if (callback) callback({ success: true });
       } catch (error) {
-        if (callback) callback({ success: false, message: error.message });
+        if (callback) callback({ success: false, message: (error as any).message });
       }
     });
 
@@ -286,7 +286,7 @@ async function bootstrap() {
         sessionLogService.record(data.sessionId, 'inject_fired', { title: inject.title, targetRole: inject.targetRole, variant: inject.variant, custom: true }).catch(() => {});
         if (callback) callback({ success: true });
       } catch (error) {
-        if (callback) callback({ success: false, message: error.message });
+        if (callback) callback({ success: false, message: (error as any).message });
       }
     });
 
@@ -297,9 +297,9 @@ async function bootstrap() {
       if (callback) callback({ success: true });
     });
 
-    socket.on('phase_changed', (data: { sessionId: string; phaseIndex: number; phaseName?: string }) => {
+    socket.on('phase_changed', (data: { sessionId: string; phaseIndex: number; phaseName?: string; scenarioTime?: string }) => {
       if (!socket.data.isAdmin) return;
-      socket.to(data.sessionId).emit('phase_changed', { phaseIndex: data.phaseIndex, phaseName: data.phaseName ?? null });
+      socket.to(data.sessionId).emit('phase_changed', { phaseIndex: data.phaseIndex, phaseName: data.phaseName ?? null, scenarioTime: data.scenarioTime ?? null });
       sessionLogService.record(data.sessionId, 'phase_changed', { phaseIndex: data.phaseIndex, phaseName: data.phaseName ?? null }).catch(() => {});
     });
 
@@ -314,8 +314,15 @@ async function bootstrap() {
         io.to(data.sessionId).emit('scenario_stopped', { session });
         if (callback) callback({ success: true });
       } catch (error) {
-        if (callback) callback({ success: false, message: error.message });
+        if (callback) callback({ success: false, message: (error as any).message });
       }
+    });
+
+    // Admin toggles scenario time visibility; relay to everyone in the session.
+    socket.on('scenario_time_update', (data: { sessionId: string; scenarioTime: string | null }, callback) => {
+      if (!socket.data.isAdmin) return callback?.({ success: false, message: 'Unauthorized' });
+      io.to(data.sessionId).emit('scenario_time_update', { scenarioTime: data.scenarioTime });
+      if (callback) callback({ success: true });
     });
 
     // Admin updates timer state; relay to everyone and persist for late joiners.
@@ -350,7 +357,7 @@ async function bootstrap() {
         const players = sess ? await playerService.getPlayerInSession(sessionId) : [];
         if (callback) callback({ success: true, sessionId, session: sess, players, currentOverlays, currentTimer });
       } catch (error) {
-        if (callback) callback({ success: false, message: error.message });
+        if (callback) callback({ success: false, message: (error as any).message });
       }
     });
   });

@@ -40,6 +40,7 @@ export interface FeedbackItem {
 export interface EscalationPhase {
     id: string;
     name: string;
+    scenarioTime: string | null;               // fictional clock shown to players, e.g. "21:02"
     floodZoneScale: number | null;              // null = no change; 0.5=klein, 1.0=middel, 1.8=groot
     floodZoneCoordinates: [number, number][] | null; // custom drawn flood zone; overrides floodZoneScale when set
     activeOverlayIds: string[];    // ids of STATIC_OVERLAYS to include
