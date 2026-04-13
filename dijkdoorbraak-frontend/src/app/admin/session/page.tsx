@@ -71,6 +71,8 @@ export default function AdminSessionPage() {
     const [timerUpdatedAt, setTimerUpdatedAt] = useState<number | null>(null);
     const [displayMs, setDisplayMs] = useState<number | null>(null);
     const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [customMinutes, setCustomMinutes] = useState('');
+    const [addMinutes, setAddMinutes] = useState('');
 
     useEffect(() => {
         if (!authenticated || !session) {
@@ -301,6 +303,11 @@ export default function AdminSessionPage() {
         emitTimer(ms, false);
     }
 
+    function addTime(ms: number) {
+        const base = timerRunning ? (displayMs ?? 0) : (timerMs ?? 0);
+        emitTimer(base + ms, timerRunning);
+    }
+
     // Local countdown effect — mirrors the one on the player page
     useEffect(() => {
         if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
@@ -523,55 +530,83 @@ export default function AdminSessionPage() {
 
                     {/* Game timer panel — hidden after session ends */}
                     {!sessionEnded && (
-                        <div className="shrink-0 bg-white border border-gray-200 rounded-xl shadow-sm p-3 flex items-center gap-3 flex-wrap">
-                            {/* Timer display */}
-                            <div className={`font-mono font-bold text-2xl tracking-widest px-4 py-1.5 rounded-xl min-w-[6.5rem] text-center ${
-                                displayMs !== null && displayMs <= 60000
-                                    ? 'bg-red-100 text-red-700'
-                                    : displayMs !== null && displayMs <= 180000
-                                    ? 'bg-amber-100 text-amber-700'
-                                    : 'bg-gray-100 text-gray-700'
-                            }`}>
-                                {displayMs !== null ? formatTimer(displayMs) : '—:——'}
+                        <div className="shrink-0 bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2">
+                            {/* Row 1: display + custom set + start/pause/reset */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <div className={`font-mono font-bold text-2xl tracking-widest px-4 py-1.5 rounded-xl min-w-[6.5rem] text-center ${
+                                    displayMs !== null && displayMs <= 60000
+                                        ? 'bg-red-100 text-red-700'
+                                        : displayMs !== null && displayMs <= 180000
+                                        ? 'bg-amber-100 text-amber-700'
+                                        : 'bg-gray-100 text-gray-700'
+                                }`}>
+                                    {displayMs !== null ? formatTimer(displayMs) : '—:——'}
+                                </div>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.5"
+                                    placeholder="min"
+                                    value={customMinutes}
+                                    onChange={(e) => setCustomMinutes(e.target.value)}
+                                    className="w-16 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center font-mono focus:outline-none focus:border-blue-400"
+                                />
+                                <button
+                                    onClick={() => { const ms = parseFloat(customMinutes) * 60000; if (ms > 0) { resetTimer(ms); setCustomMinutes(''); } }}
+                                    disabled={!customMinutes || parseFloat(customMinutes) <= 0}
+                                    className="bg-gray-100 hover:bg-gray-200 disabled:text-gray-300 text-gray-700 text-sm font-semibold rounded-lg px-3 py-1.5 transition"
+                                >
+                                    Instellen
+                                </button>
+                                <div className="flex items-center gap-2 ml-auto">
+                                    {!timerRunning ? (
+                                        <button
+                                            onClick={startTimer}
+                                            disabled={timerMs === null || timerMs <= 0}
+                                            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-100 disabled:text-gray-400 text-white text-sm font-semibold rounded-lg px-4 py-1.5 transition"
+                                        >
+                                            ▶ Start
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={pauseTimer}
+                                            className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg px-4 py-1.5 transition"
+                                        >
+                                            ⏸ Pauze
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => resetTimer()}
+                                        disabled={timerMs === null}
+                                        className="bg-gray-100 hover:bg-gray-200 disabled:text-gray-300 text-gray-700 text-sm font-semibold rounded-lg px-3 py-1.5 transition"
+                                    >
+                                        ↺ Reset
+                                    </button>
+                                </div>
                             </div>
-                            {/* Presets */}
-                            <button
-                                onClick={() => resetTimer(10 * 60 * 1000)}
-                                className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg px-3 py-1.5 transition"
-                            >
-                                10 min
-                            </button>
-                            <button
-                                onClick={() => resetTimer(3 * 60 * 1000)}
-                                className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg px-3 py-1.5 transition"
-                            >
-                                3 min
-                            </button>
-                            {/* Controls */}
-                            {!timerRunning ? (
+                            {/* Row 2: add time */}
+                            <div className="flex items-center gap-2 border-t border-gray-100 pt-2 flex-wrap">
+                                <span className="text-gray-400 text-xs shrink-0">+ Toevoegen:</span>
+                                <button onClick={() => addTime(10 * 60000)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition">+10 min</button>
+                                <button onClick={() => addTime(15 * 60000)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition">+15 min</button>
+                                <button onClick={() => addTime(30 * 60000)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition">+30 min</button>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    step="0.5"
+                                    placeholder="min"
+                                    value={addMinutes}
+                                    onChange={(e) => setAddMinutes(e.target.value)}
+                                    className="w-14 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-xs text-center font-mono focus:outline-none focus:border-blue-400"
+                                />
                                 <button
-                                    onClick={startTimer}
-                                    disabled={timerMs === null || timerMs <= 0}
-                                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-100 disabled:text-gray-400 text-white text-sm font-semibold rounded-lg px-4 py-1.5 transition"
+                                    onClick={() => { const ms = parseFloat(addMinutes) * 60000; if (ms > 0) { addTime(ms); setAddMinutes(''); } }}
+                                    disabled={!addMinutes || parseFloat(addMinutes) <= 0}
+                                    className="bg-blue-50 hover:bg-blue-100 disabled:text-gray-300 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition"
                                 >
-                                    ▶ Start
+                                    + Toevoegen
                                 </button>
-                            ) : (
-                                <button
-                                    onClick={pauseTimer}
-                                    className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg px-4 py-1.5 transition"
-                                >
-                                    ⏸ Pauze
-                                </button>
-                            )}
-                            <button
-                                onClick={() => resetTimer()}
-                                disabled={timerMs === null}
-                                className="bg-gray-100 hover:bg-gray-200 disabled:text-gray-300 text-gray-700 text-sm font-semibold rounded-lg px-3 py-1.5 transition"
-                            >
-                                ↺ Reset
-                            </button>
-                            <span className="text-gray-400 text-xs ml-auto">Timer</span>
+                            </div>
                         </div>
                     )}
 

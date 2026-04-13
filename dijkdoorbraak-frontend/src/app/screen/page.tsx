@@ -22,6 +22,7 @@ function ScreenContent() {
     const [codeInput, setCodeInput] = useState('');
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [overlays, setOverlays] = useState<MapOverlay[]>([]);
+    const [incidentLocation, setIncidentLocation] = useState<[number, number] | null>(null);
     const [error, setError] = useState('');
     const [connecting, setConnecting] = useState(false);
     const [showQR, setShowQR] = useState(false);
@@ -60,6 +61,10 @@ function ScreenContent() {
             }
             setSessionId(res.sessionId);
             setOverlays(Array.isArray(res.currentOverlays) ? res.currentOverlays : []);
+            const sc = res.session?.scenario;
+            if (sc?.incidentLat != null && sc?.incidentLng != null) {
+                setIncidentLocation([sc.incidentLat, sc.incidentLng]);
+            }
             if (res.currentTimer) {
                 setTimerMs(res.currentTimer.remainingMs);
                 setTimerRunning(res.currentTimer.running);
@@ -85,9 +90,16 @@ function ScreenContent() {
             setTimerUpdatedAt(Date.now());
         });
 
+        socket.on('scenario_started', (data: { incidentLat?: number; incidentLng?: number }) => {
+            if (data.incidentLat != null && data.incidentLng != null) {
+                setIncidentLocation([data.incidentLat, data.incidentLng]);
+            }
+        });
+
         socket.on('scenario_stopped', () => {
             setSessionId(null);
             setOverlays([]);
+            setIncidentLocation(null);
             setTimerMs(null);
             setTimerRunning(false);
         });
@@ -96,6 +108,7 @@ function ScreenContent() {
             socket.off('overlays_set');
             socket.off('map_update');
             socket.off('timer_update');
+            socket.off('scenario_started');
             socket.off('scenario_stopped');
         };
     }
@@ -163,7 +176,7 @@ function ScreenContent() {
     // Fullscreen map + timer
     return (
         <main className="relative w-full h-dvh overflow-hidden bg-black">
-            <GameMap overlays={overlays} />
+            <GameMap overlays={overlays} incidentLocation={incidentLocation} />
 
             {/* Timer overlay — center top */}
             {displayMs !== null && (
