@@ -299,7 +299,7 @@ async function bootstrap() {
 
     socket.on('phase_changed', (data: { sessionId: string; phaseIndex: number; phaseName?: string }) => {
       if (!socket.data.isAdmin) return;
-      socket.to(data.sessionId).emit('phase_changed', { phaseIndex: data.phaseIndex });
+      socket.to(data.sessionId).emit('phase_changed', { phaseIndex: data.phaseIndex, phaseName: data.phaseName ?? null });
       sessionLogService.record(data.sessionId, 'phase_changed', { phaseIndex: data.phaseIndex, phaseName: data.phaseName ?? null }).catch(() => {});
     });
 

@@ -26,6 +26,7 @@ function ScreenContent() {
     const [error, setError] = useState('');
     const [connecting, setConnecting] = useState(false);
     const [showQR, setShowQR] = useState(false);
+    const [currentPhase, setCurrentPhase] = useState<string | null>(null);
 
     // Timer state
     const [timerMs, setTimerMs] = useState<number | null>(null);
@@ -96,12 +97,17 @@ function ScreenContent() {
             }
         });
 
+        socket.on('phase_changed', (data: { phaseIndex: number; phaseName?: string | null }) => {
+            if (data.phaseName) setCurrentPhase(data.phaseName);
+        });
+
         socket.on('scenario_stopped', () => {
             setSessionId(null);
             setOverlays([]);
             setIncidentLocation(null);
             setTimerMs(null);
             setTimerRunning(false);
+            setCurrentPhase(null);
         });
 
         return () => {
@@ -109,6 +115,7 @@ function ScreenContent() {
             socket.off('map_update');
             socket.off('timer_update');
             socket.off('scenario_started');
+            socket.off('phase_changed');
             socket.off('scenario_stopped');
         };
     }
@@ -137,33 +144,33 @@ function ScreenContent() {
     // Code entry screen
     if (!sessionId) {
         return (
-            <main className="min-h-screen bg-gray-900 flex flex-col items-center justify-center px-6">
-                <div className="w-full max-w-sm space-y-6">
+            <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6">
+                <div className="w-full max-w-sm space-y-8">
                     <div className="text-center space-y-2">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-2">
-                            <span className="text-white text-3xl">🌊</span>
+                        <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl mb-2">
+                            <span className="text-white text-2xl">🌊</span>
                         </div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">Dijkdoorbraak</h1>
-                        <p className="text-gray-400 text-sm">Projectiescherm — voer sessiecode in</p>
+                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Dijkdoorbraak</h1>
+                        <p className="text-gray-500 text-sm">Projectiescherm — voer sessiecode in</p>
                     </div>
 
-                    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6 space-y-4">
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
                         <input
                             type="text"
                             value={codeInput}
                             onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
                             placeholder="SESSIECODE"
                             maxLength={6}
-                            className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white text-xl font-mono tracking-widest uppercase text-center placeholder:text-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                            className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 text-xl font-mono tracking-widest uppercase text-center placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                             onKeyDown={(e) => e.key === 'Enter' && connect(codeInput)}
                         />
 
-                        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                        {error && <p className="text-red-600 text-sm text-center">{error}</p>}
 
                         <button
                             onClick={() => connect(codeInput)}
                             disabled={connecting || !codeInput.trim()}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-semibold rounded-xl py-3 transition"
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl py-3 transition"
                         >
                             {connecting ? 'Verbinden...' : 'Verbinden'}
                         </button>
@@ -188,6 +195,13 @@ function ScreenContent() {
                         : 'bg-black/70 backdrop-blur text-white border border-white/20'
                 }`}>
                     {formatTimer(displayMs)}
+                </div>
+            )}
+
+            {/* Current phase badge — top left */}
+            {currentPhase && (
+                <div className="absolute top-6 left-6 z-10 bg-blue-600/90 backdrop-blur rounded-xl px-5 py-2 text-white font-semibold text-lg shadow-lg">
+                    {currentPhase}
                 </div>
             )}
 

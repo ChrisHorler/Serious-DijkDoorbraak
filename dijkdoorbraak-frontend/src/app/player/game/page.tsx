@@ -25,6 +25,7 @@ export default function GamePage() {
     const { player, session, addInject, addToast, setActiveInject, addOverlay, setOverlays, overlays, pendingPin, setPendingPin, incidentLocation, scenarioTime, timerMs, timerRunning, timerUpdatedAt, setTimer } = useGameStore();
     const [displayMs, setDisplayMs] = useState<number | null>(null);
     const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [currentPhase, setCurrentPhase] = useState<string | null>(null);
     const [actionFeedback, setActionFeedback] = useState<{ approved: boolean; response: string | null } | null>(null);
     const [pinPublished, setPinPublished] = useState(false);
     const [showRoleDetail, setShowRoleDetail] = useState(false);
@@ -77,6 +78,10 @@ export default function GamePage() {
             setTimer(data.remainingMs, data.running);
         });
 
+        socket.on('phase_changed', (data: { phaseIndex: number; phaseName?: string | null }) => {
+            if (data.phaseName) setCurrentPhase(data.phaseName);
+        });
+
         socket.on('scenario_stopped', () => {
             router.push('/player/feedback');
         });
@@ -88,6 +93,7 @@ export default function GamePage() {
             socket.off('map_update');
             socket.off('overlays_set');
             socket.off('timer_update');
+            socket.off('phase_changed');
             socket.off('scenario_stopped');
         };
     }, [player, session]);
@@ -119,23 +125,32 @@ export default function GamePage() {
             {/* Map fills the screen */}
             <GameMap overlays={overlays} pendingPin={pendingPin} incidentLocation={incidentLocation} />
 
-            {/* Scenario time badge — top right, small and unobtrusive */}
-            {scenarioTime && (
-                <div className="absolute top-4 right-4 z-10 bg-black/60 backdrop-blur rounded-lg px-3 py-1.5 text-white font-mono text-sm font-semibold shadow">
-                    🕐 {scenarioTime}
-                </div>
-            )}
+            {/* Top-right cluster: timer + scenario time */}
+            <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
+                {/* Game timer */}
+                {displayMs !== null && (
+                    <div className={`px-4 py-2 rounded-xl shadow-lg font-mono font-bold text-xl tracking-widest transition ${
+                        displayMs <= 60000
+                            ? 'bg-red-600 text-white animate-pulse'
+                            : displayMs <= 180000
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-white/90 backdrop-blur text-gray-900 border border-gray-200'
+                    }`}>
+                        {formatTimer(displayMs)}
+                    </div>
+                )}
+                {/* Scenario time badge */}
+                {scenarioTime && (
+                    <div className="bg-black/60 backdrop-blur rounded-lg px-3 py-1 text-white font-mono text-xs font-semibold shadow">
+                        🕐 {scenarioTime}
+                    </div>
+                )}
+            </div>
 
-            {/* Game timer — center top, only shown when a timer is set */}
-            {displayMs !== null && (
-                <div className={`absolute top-4 left-1/2 -translate-x-1/2 z-10 px-5 py-2 rounded-xl shadow-lg font-mono font-bold text-xl tracking-widest transition ${
-                    displayMs <= 60000
-                        ? 'bg-red-600 text-white animate-pulse'
-                        : displayMs <= 180000
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-white/90 backdrop-blur text-gray-900 border border-gray-200'
-                }`}>
-                    {formatTimer(displayMs)}
+            {/* Current phase badge — bottom of screen, above ability menu */}
+            {currentPhase && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-blue-600/90 backdrop-blur rounded-lg px-4 py-1.5 text-white text-xs font-semibold shadow">
+                    {currentPhase}
                 </div>
             )}
 
