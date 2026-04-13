@@ -587,20 +587,20 @@ export default function AdminSessionPage() {
                             {/* Row 2: add time */}
                             <div className="flex items-center gap-2 border-t border-gray-100 pt-2 flex-wrap">
                                 <span className="text-gray-400 text-xs shrink-0">+ Toevoegen:</span>
-                                <button onClick={() => addTime(10 * 60000)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition">+10 min</button>
-                                <button onClick={() => addTime(15 * 60000)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition">+15 min</button>
-                                <button onClick={() => addTime(30 * 60000)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition">+30 min</button>
+                                <button onClick={() => addTime(10 * 1000)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition">+10 sec</button>
+                                <button onClick={() => addTime(15 * 1000)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition">+15 sec</button>
+                                <button onClick={() => addTime(30 * 1000)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition">+30 sec</button>
                                 <input
                                     type="number"
                                     min="1"
-                                    step="0.5"
-                                    placeholder="min"
+                                    step="1"
+                                    placeholder="sec"
                                     value={addMinutes}
                                     onChange={(e) => setAddMinutes(e.target.value)}
                                     className="w-14 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-xs text-center font-mono focus:outline-none focus:border-blue-400"
                                 />
                                 <button
-                                    onClick={() => { const ms = parseFloat(addMinutes) * 60000; if (ms > 0) { addTime(ms); setAddMinutes(''); } }}
+                                    onClick={() => { const ms = parseFloat(addMinutes) * 1000; if (ms > 0) { addTime(ms); setAddMinutes(''); } }}
                                     disabled={!addMinutes || parseFloat(addMinutes) <= 0}
                                     className="bg-blue-50 hover:bg-blue-100 disabled:text-gray-300 text-blue-700 text-xs font-semibold rounded-lg px-3 py-1 transition"
                                 >
