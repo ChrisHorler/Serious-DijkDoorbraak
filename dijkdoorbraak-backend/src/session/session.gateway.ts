@@ -29,7 +29,7 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
   ) {
     console.log("join_lobby received:", data);
     try {
-      const player = await this.playerService.joinSession(data.joinCode, data.nickname);
+      const { player, rejoined } = await this.playerService.joinSession(data.joinCode, data.nickname);
 
       client.join(player.sessionId);
       client.data.playerId = player.id;
@@ -39,7 +39,7 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
       this.server.to(player.sessionId).emit('lobby_updated', { players });
 
-      return { success: true, player };
+      return { success: true, player, rejoined };
     } catch (error) {
       return { success: false, message: error.message };
     }
