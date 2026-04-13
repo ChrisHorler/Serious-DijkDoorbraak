@@ -251,6 +251,12 @@ async function bootstrap() {
 
     socket.on('map_update', (data: { sessionId: string; overlay: any }) => {
       if (!socket.data.isAdmin) return;
+      const current = sessionOverlays.get(data.sessionId) ?? [];
+      const exists = current.some((o: any) => o.id === data.overlay.id);
+      sessionOverlays.set(data.sessionId, exists
+        ? current.filter((o: any) => o.id !== data.overlay.id)
+        : [...current, data.overlay]
+      );
       io.to(data.sessionId).emit('map_update', { overlay: data.overlay });
     });
 

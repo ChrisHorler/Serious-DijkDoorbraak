@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { connectSocket } from '@/lib/socket';
+import { QRCodeSVG } from 'qrcode.react';
 import type { MapOverlay } from '@/lib/store';
 
 const GameMap = dynamic(() => import('@/components/player/GameMap'), { ssr: false });
@@ -23,6 +24,7 @@ function ScreenContent() {
     const [overlays, setOverlays] = useState<MapOverlay[]>([]);
     const [error, setError] = useState('');
     const [connecting, setConnecting] = useState(false);
+    const [showQR, setShowQR] = useState(false);
 
     // Timer state
     const [timerMs, setTimerMs] = useState<number | null>(null);
@@ -42,7 +44,7 @@ function ScreenContent() {
 
     // Auto-connect when code comes from URL
     useEffect(() => {
-        if (joinCode) connect(joinCode);
+        if (joinCode) return connect(joinCode);
     }, [joinCode]);
 
     function connect(code: string) {
@@ -180,6 +182,42 @@ function ScreenContent() {
             <div className="absolute bottom-4 right-4 z-10 bg-black/50 backdrop-blur rounded-lg px-3 py-1.5 text-white/60 font-mono text-xs">
                 {joinCode}
             </div>
+
+            {/* QR button — bottom left, for admin to show join QR */}
+            <button
+                onClick={() => setShowQR(true)}
+                className="absolute bottom-4 left-4 z-10 bg-black/50 backdrop-blur hover:bg-black/70 rounded-lg px-3 py-1.5 text-white/60 hover:text-white text-xs transition"
+                title="Toon QR-code voor deelnemers"
+            >
+                QR
+            </button>
+
+            {/* QR modal */}
+            {showQR && (
+                <div
+                    className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+                    onClick={() => setShowQR(false)}
+                >
+                    <div
+                        className="bg-white rounded-3xl p-10 flex flex-col items-center gap-6 shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <p className="text-gray-500 text-sm uppercase tracking-widest">Deelnemen aan sessie</p>
+                        <QRCodeSVG
+                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/player/join?code=${joinCode}`}
+                            size={280}
+                        />
+                        <p className="text-gray-900 text-5xl font-mono font-bold tracking-widest">{joinCode}</p>
+                        <p className="text-gray-400 text-sm text-center">Scan of voer de code in op je telefoon</p>
+                        <button
+                            onClick={() => setShowQR(false)}
+                            className="text-gray-400 hover:text-gray-700 text-sm transition"
+                        >
+                            ✕ Sluiten
+                        </button>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

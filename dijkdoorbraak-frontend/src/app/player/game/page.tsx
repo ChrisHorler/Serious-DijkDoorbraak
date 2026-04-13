@@ -10,7 +10,6 @@ import InjectToast from '@/components/player/InjectToast';
 import InjectModal from '@/components/player/InjectModal';
 import InjectHistoryPanel from '@/components/player/InjectHistoryPanel';
 import RoleDetailPanel from '@/components/player/RoleDetailPanel';
-import { QRCodeSVG } from 'qrcode.react';
 
 const GameMap = dynamic(() => import('@/components/player/GameMap'), { ssr: false });
 
@@ -29,7 +28,6 @@ export default function GamePage() {
     const [actionFeedback, setActionFeedback] = useState<{ approved: boolean; response: string | null } | null>(null);
     const [pinPublished, setPinPublished] = useState(false);
     const [showRoleDetail, setShowRoleDetail] = useState(false);
-    const [showRejoinQR, setShowRejoinQR] = useState(false);
 
     useEffect(() => {
         if (!player || !session) {
@@ -198,43 +196,6 @@ export default function GamePage() {
                 </div>
             )}
 
-            {/* Rejoin QR button — bottom-left corner */}
-            {session && (
-                <button
-                    onClick={() => setShowRejoinQR(true)}
-                    className="absolute bottom-4 left-4 z-10 bg-white/80 backdrop-blur border border-gray-200 rounded-xl px-3 py-2 shadow-sm text-gray-500 text-xs hover:bg-white transition"
-                    title="Toon QR-code om opnieuw in te loggen"
-                >
-                    ⟳ QR
-                </button>
-            )}
-
-            {/* Rejoin QR modal */}
-            {showRejoinQR && session && (
-                <div
-                    className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-6"
-                    onClick={() => setShowRejoinQR(false)}
-                >
-                    <div
-                        className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl max-w-xs w-full"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <p className="text-gray-500 text-xs uppercase tracking-widest">Opnieuw deelnemen</p>
-                        <QRCodeSVG
-                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/player/join?code=${session.joinCode}`}
-                            size={200}
-                        />
-                        <p className="text-gray-900 text-4xl font-mono font-bold tracking-widest">{session.joinCode}</p>
-                        <p className="text-gray-400 text-xs text-center">Scan om opnieuw deel te nemen met dezelfde naam</p>
-                        <button
-                            onClick={() => setShowRejoinQR(false)}
-                            className="text-gray-400 hover:text-gray-700 text-sm transition"
-                        >
-                            ✕ Sluiten
-                        </button>
-                    </div>
-                </div>
-            )}
 
             {/* Toast notifications */}
             <InjectToast />
