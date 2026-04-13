@@ -566,7 +566,7 @@ export default function EditorPage() {
                         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                             <span className="text-xs uppercase tracking-widest text-gray-500">Scenario's</span>
                             <button
-                                onClick={() => { setEditingScenario('new'); setScenarioForm({ title: '', description: '' }); setSelectedScenario(null); setPhases([]); setCustomOverlays([]); }}
+                                onClick={() => { setEditingScenario('new'); setScenarioForm({ title: '', description: '', scenarioTime: '' }); setSelectedScenario(null); setPhases([]); setCustomOverlays([]); }}
                                 className="text-blue-600 hover:text-blue-700 text-xs font-medium transition"
                             >+ Nieuw</button>
                         </div>
