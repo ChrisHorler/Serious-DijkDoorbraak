@@ -183,7 +183,7 @@ function ScreenContent() {
     // Fullscreen map + timer
     return (
         <main className="relative w-full h-dvh overflow-hidden bg-black">
-            <GameMap overlays={overlays} incidentLocation={incidentLocation} />
+            <GameMap overlays={overlays} incidentLocation={incidentLocation} iconScale={1.4} />
 
             {/* Timer overlay — center top */}
             {displayMs !== null && (

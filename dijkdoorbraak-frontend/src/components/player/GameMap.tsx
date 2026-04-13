@@ -18,9 +18,10 @@ interface GameMapProps {
     overlays?: MapOverlay[];
     pendingPin?: { lat: number; lng: number } | null;
     incidentLocation?: [number, number] | null;
+    iconScale?: number; // multiplier for marker icon size, default 1
 }
 
-export default function GameMap({ overlays = [], pendingPin, incidentLocation }: GameMapProps) {
+export default function GameMap({ overlays = [], pendingPin, incidentLocation, iconScale = 1 }: GameMapProps) {
     const center = incidentLocation ?? INCIDENT_LOCATION;
     return (
         <MapContainer
@@ -67,12 +68,14 @@ export default function GameMap({ overlays = [], pendingPin, incidentLocation }:
                 }
                 if (overlay.kind === 'marker') {
                     const pos = overlay.coordinates as [number, number];
+                    const fs = Math.round(22 * iconScale);
+                    const sz = Math.round(28 * iconScale);
                     const icon = overlay.icon
                         ? L.divIcon({
-                            html: `<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))">${overlay.icon}</div>`,
+                            html: `<div style="font-size:${fs}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))">${overlay.icon}</div>`,
                             className: '',
-                            iconSize: [28, 28],
-                            iconAnchor: [14, 14],
+                            iconSize: [sz, sz],
+                            iconAnchor: [sz / 2, sz / 2],
                         })
                         : undefined;
                     return (

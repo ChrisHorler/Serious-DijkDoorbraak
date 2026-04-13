@@ -25,7 +25,7 @@ export default function GamePage() {
     const { player, session, addInject, addToast, setActiveInject, addOverlay, setOverlays, overlays, pendingPin, setPendingPin, incidentLocation, scenarioTime, timerMs, timerRunning, timerUpdatedAt, setTimer } = useGameStore();
     const [displayMs, setDisplayMs] = useState<number | null>(null);
     const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const [currentPhase, setCurrentPhase] = useState<string | null>(null);
+    const [currentPhaseIndex, setCurrentPhaseIndex] = useState<number | null>(null);
     const [actionFeedback, setActionFeedback] = useState<{ approved: boolean; response: string | null } | null>(null);
     const [pinPublished, setPinPublished] = useState(false);
     const [showRoleDetail, setShowRoleDetail] = useState(false);
@@ -79,7 +79,7 @@ export default function GamePage() {
         });
 
         socket.on('phase_changed', (data: { phaseIndex: number; phaseName?: string | null }) => {
-            if (data.phaseName) setCurrentPhase(data.phaseName);
+            setCurrentPhaseIndex(data.phaseIndex);
         });
 
         socket.on('scenario_stopped', () => {
@@ -125,8 +125,8 @@ export default function GamePage() {
             {/* Map fills the screen */}
             <GameMap overlays={overlays} pendingPin={pendingPin} incidentLocation={incidentLocation} />
 
-            {/* Top-right cluster: timer + scenario time */}
-            <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
+            {/* Top-right cluster: timer + scenario time + phase */}
+            <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1.5">
                 {/* Game timer */}
                 {displayMs !== null && (
                     <div className={`px-4 py-2 rounded-xl shadow-lg font-mono font-bold text-xl tracking-widest transition ${
@@ -145,14 +145,13 @@ export default function GamePage() {
                         🕐 {scenarioTime}
                     </div>
                 )}
+                {/* Phase badge */}
+                {currentPhaseIndex !== null && (
+                    <div className="bg-blue-600/80 backdrop-blur rounded-lg px-3 py-1 text-white text-xs font-semibold shadow">
+                        Fase {currentPhaseIndex + 1}
+                    </div>
+                )}
             </div>
-
-            {/* Current phase badge — bottom of screen, above ability menu */}
-            {currentPhase && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-blue-600/90 backdrop-blur rounded-lg px-4 py-1.5 text-white text-xs font-semibold shadow">
-                    {currentPhase}
-                </div>
-            )}
 
             {/* Role badge top left — tappable to open detail */}
             {player?.role && (
