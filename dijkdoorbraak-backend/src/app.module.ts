@@ -10,6 +10,7 @@ import { DecisionModule } from './decision/decision.module';
 import { AuthModule } from './auth/auth.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { FeedbackQuestionModule } from './feedback-question/feedback-question.module';
+import { SessionLogModule } from './session-log/session-log.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { FeedbackQuestionModule } from './feedback-question/feedback-question.mo
     AuthModule,
     FeedbackModule,
     FeedbackQuestionModule,
+    SessionLogModule,
   ],
 })
 export class AppModule {}

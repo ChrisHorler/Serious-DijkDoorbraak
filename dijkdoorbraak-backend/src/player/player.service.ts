@@ -15,27 +15,33 @@ export class PlayerService {
       throw new NotFoundException("Invalid join code");
     }
 
-    if (session.status !== SessionStatus.LOBBY) {
-      throw new BadRequestException("Session is no longer acccepting players");
+    if (session.status === SessionStatus.ENDED) {
+      throw new BadRequestException("Dit scenario is al afgelopen.");
     }
 
     const existingPlayer = await this.prisma.db.player.findFirst({
       where: { sessionId: session.id, nickname },
+      include: { session: { include: { scenario: true } }, role: { include: { abilities: true } } },
     });
 
+    if (session.status === SessionStatus.RUNNING) {
+      // Only allow re-entry for players already in this session
+      if (!existingPlayer) {
+        throw new BadRequestException("Het scenario is al gestart — je kunt niet meer deelnemen.");
+      }
+      return { player: existingPlayer, rejoined: true };
+    }
+
+    // LOBBY: block duplicate nicknames
     if (existingPlayer) {
       throw new BadRequestException("Nickname already taken in this session");
     }
 
-    return this.prisma.db.player.create({
-      data: {
-        sessionId: session.id,
-        nickname,
-      },
-      include: {
-        session: true,
-      },
+    const player = await this.prisma.db.player.create({
+      data: { sessionId: session.id, nickname },
+      include: { session: { include: { scenario: true } }, role: { include: { abilities: true } } },
     });
+    return { player, rejoined: false };
   }
 
   async getPlayer(id: string) {

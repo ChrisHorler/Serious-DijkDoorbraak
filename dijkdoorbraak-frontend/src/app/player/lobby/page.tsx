@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSocket } from '@/lib/socket';
 import { useGameStore } from '@/lib/store';
@@ -9,9 +9,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:300
 
 export default function LobbyPage() {
   const router = useRouter();
-  const { player, session, lobbyPlayers, setLobbyPlayers, setPlayer, setIncidentLocation, setFeedbackQuestions, setOverlays } = useGameStore();
-  const hasJoined = useRef(false);
-
+  const { player, session, lobbyPlayers, setLobbyPlayers, setPlayer, setIncidentLocation, setFeedbackQuestions, setOverlays, setScenarioTime, setTimer } = useGameStore();
   useEffect(() => {
     if (!player || !session) {
       router.replace('/player/join');
@@ -19,6 +17,16 @@ export default function LobbyPage() {
     }
 
     const socket = getSocket();
+
+    function registerWithServer() {
+      socket.emit('rejoin_lobby', { sessionId: session!.id, playerId: player!.id });
+    }
+    socket.on('connect', registerWithServer);
+    if (socket.connected) {
+      registerWithServer();
+    } else {
+      socket.connect();
+    }
 
     socket.on('lobby_updated', (data: { players: any[] }) => {
       setLobbyPlayers(data.players);
@@ -34,14 +42,18 @@ export default function LobbyPage() {
       }
     });
 
-    socket.on('scenario_started', (data: { incidentLat?: number; incidentLng?: number; feedbackQuestions?: any[] }) => {
+    socket.on('scenario_started', (data: { incidentLat?: number; incidentLng?: number; scenarioTime?: string; feedbackQuestions?: any[] }) => {
       setOverlays([]); // clear any overlays from a previous session
       if (data?.incidentLat != null && data?.incidentLng != null) {
         setIncidentLocation([data.incidentLat, data.incidentLng]);
       }
+      if (data?.scenarioTime) {
+        setScenarioTime(data.scenarioTime);
+      }
       if (data?.feedbackQuestions) {
         setFeedbackQuestions(data.feedbackQuestions);
       }
+      setTimer(0, false); // reset timer
       router.push('/player/game');
     });
 
@@ -49,19 +61,8 @@ export default function LobbyPage() {
       .then((res) => res.json())
       .then((players) => setLobbyPlayers(players));
 
-    if (!hasJoined.current) {
-      hasJoined.current = true;
-      if (socket.connected) {
-        socket.emit('rejoin_lobby', { sessionId: session.id, playerId: player.id });
-      } else {
-        socket.connect();
-        socket.once('connect', () => {
-          socket.emit('rejoin_lobby', { sessionId: session.id, playerId: player.id });
-        });
-      }
-    }
-
     return () => {
+      socket.off('connect', registerWithServer);
       socket.off('lobby_updated');
       socket.off('role_assigned');
       socket.off('scenario_started');
@@ -88,15 +89,29 @@ export default function LobbyPage() {
         </div>
 
         {/* Role card */}
-        <div className={`rounded-2xl p-5 border shadow-sm ${me?.role ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
+        <div className={`rounded-2xl border shadow-sm overflow-hidden ${me?.role ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
           {me?.role ? (
-            <div className="space-y-1">
-              <p className="text-blue-600 text-xs uppercase tracking-widest font-medium">Jouw rol</p>
-              <p className="text-gray-900 text-xl font-bold">{me.role.name}</p>
-              <p className="text-gray-600 text-sm">{me.role.description}</p>
+            <div>
+              <div className="p-5 space-y-1">
+                <p className="text-blue-600 text-xs uppercase tracking-widest font-medium">Jouw rol</p>
+                <p className="text-gray-900 text-xl font-bold">{me.role.name}</p>
+                <p className="text-gray-600 text-sm">{me.role.description}</p>
+              </div>
+              {me.role.briefing && (
+                <div className="border-t border-blue-200 px-5 py-4 bg-white/60 space-y-1.5">
+                  <p className="text-blue-600 text-xs font-semibold uppercase tracking-widest">Roltoelichting</p>
+                  <div className="text-gray-700 text-sm leading-relaxed space-y-1">
+                    {me.role.briefing.split('\n').map((line, i) =>
+                      line.trim()
+                        ? <p key={i}>{line}</p>
+                        : <div key={i} className="h-1" />
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="p-5 flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               <p className="text-gray-700 text-sm">Wachten op rolinzet door de spelleider...</p>
             </div>

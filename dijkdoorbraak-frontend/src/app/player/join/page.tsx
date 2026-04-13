@@ -3,12 +3,12 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { connectSocket } from '@/lib/socket';
-import { useGameStore } from '@/lib/store';
+import { useGameStore, MapOverlay } from '@/lib/store';
 
 function JoinForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { setPlayer, setSession, setLobbyPlayers, reset } = useGameStore();
+    const { setPlayer, setSession, setLobbyPlayers, setOverlays, setIncidentLocation, setScenarioTime, setTimer, reset } = useGameStore();
 
     const [joinCode, setJoinCode] = useState('');
     const [nickname, setNickname] = useState('');
@@ -43,7 +43,28 @@ function JoinForm() {
             setLobbyPlayers([]);
             setPlayer(res.player);
             setSession(res.player.session);
-            router.push('/player/lobby');
+
+            if (res.rejoined) {
+                // Restore map overlays the admin had active before the disconnect
+                if (Array.isArray(res.currentOverlays)) {
+                    setOverlays(res.currentOverlays as MapOverlay[]);
+                }
+                // Restore incident location and scenario time from session's scenario
+                const s = res.player.session;
+                if (s.scenario?.incidentLat != null && s.scenario?.incidentLng != null) {
+                    setIncidentLocation([s.scenario.incidentLat, s.scenario.incidentLng]);
+                }
+                if (s.scenario?.scenarioTime) {
+                    setScenarioTime(s.scenario.scenarioTime);
+                }
+                // Restore timer if active
+                if (res.currentTimer) {
+                    setTimer(res.currentTimer.remainingMs, res.currentTimer.running);
+                }
+                router.push('/player/game');
+            } else {
+                router.push('/player/lobby');
+            }
         });
     }
 

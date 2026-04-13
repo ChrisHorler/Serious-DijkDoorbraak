@@ -14,6 +14,7 @@ model Scenario {
   customOverlays    Json?
   incidentLat       Float?
   incidentLng       Float?
+  scenarioTime      String?
   Injects           Inject[]
   sessions          Session[]
   feedbackQuestions FeedbackQuestion[]
@@ -42,6 +43,7 @@ model Session {
   players    Player[]
   decisions  Decision[]
   feedbacks  Feedback[]
+  logs       SessionLog[]
   createdAt  DateTime      @default(now())
   startedAt  DateTime?
   endedAt    DateTime?
@@ -119,6 +121,17 @@ model Ability {
   description String?
   decisions   Decision[]
   createdAt   DateTime   @default(now())
+}
+
+model SessionLog {
+  id        String   @id @default(uuid())
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  event     String   // e.g. "scenario_started", "phase_changed", "inject_fired", "player_joined"
+  details   Json?
+  timestamp DateTime @default(now())
+
+  @@index([sessionId, timestamp])
 }
 
 enum SessionStatus {

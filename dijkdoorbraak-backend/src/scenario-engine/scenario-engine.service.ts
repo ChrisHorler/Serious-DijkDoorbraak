@@ -47,6 +47,8 @@ export class ScenarioEngineService {
             playerId: player.id,
             inject,
           });
+        } else {
+          console.warn(`inject "${inject.title}": player ${player.nickname} has no active socket — they may be disconnected`);
         }
       }
     } else {

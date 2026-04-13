@@ -53,6 +53,8 @@ export default function AdminLobbyPage() {
     const [creating, setCreating] = useState(false);
     const [starting, setStarting] = useState(false);
     const [focusedQR, setFocusedQR] = useState<{ label: string; url: string } | null>(null);
+    const [activeSessions, setActiveSessions] = useState<any[]>([]);
+    const [rejoining, setRejoining] = useState<string | null>(null);
 
     useEffect(() => {
         if (!authenticated) {
@@ -62,6 +64,16 @@ export default function AdminLobbyPage() {
 
         fetch(`${BACKEND_URL}/roles`).then(r => r.json()).then(setRoles);
         fetch(`${BACKEND_URL}/sessions/scenarios/all`).then(r => r.json()).then(setScenarios);
+
+        // Load active sessions for admin rejoin (when no session in store)
+        if (!session) {
+            fetch(`${BACKEND_URL}/sessions`)
+                .then(r => r.json())
+                .then((all: any[]) => {
+                    setActiveSessions(all.filter(s => s.status === 'RUNNING' || s.status === 'LOBBY'));
+                })
+                .catch(() => setActiveSessions([]));
+        }
 
         const socket = connectAdminSocket(token!);
 
@@ -89,6 +101,9 @@ export default function AdminLobbyPage() {
                         fetch(`${BACKEND_URL}/injects/scenario/${session.scenarioId}`)
                             .then(r => r.json()).then(setInjects);
                         socket.emit('admin_join', { sessionId: session.id });
+                        if (s.status === 'RUNNING') {
+                            router.push('/admin/session');
+                        }
                     }
                 })
                 .catch(() => {
@@ -102,6 +117,40 @@ export default function AdminLobbyPage() {
             socket.off('scenario_started');
         };
     }, [authenticated, session]);
+
+    async function rejoinSession(activeSession: any) {
+        setRejoining(activeSession.id);
+        try {
+            const [scenarioRes, playersRes, injectsRes] = await Promise.all([
+                fetch(`${BACKEND_URL}/sessions/scenarios/${activeSession.scenarioId}`),
+                fetch(`${BACKEND_URL}/players/session/${activeSession.id}`),
+                fetch(`${BACKEND_URL}/injects/scenario/${activeSession.scenarioId}`),
+            ]);
+            const scenario = await scenarioRes.json();
+            const players = await playersRes.json();
+            const injectList = await injectsRes.json();
+
+            setPhases(Array.isArray(scenario.phases) ? scenario.phases : []);
+            setScenarioCustomOverlays(Array.isArray(scenario.customOverlays) ? scenario.customOverlays : []);
+            if (scenario.incidentLat != null && scenario.incidentLng != null) {
+                setIncidentLocation([scenario.incidentLat, scenario.incidentLng]);
+            } else {
+                setIncidentLocation(null);
+            }
+            setSession(activeSession);
+            setPlayers(players);
+            setInjects(injectList);
+
+            const socket = connectAdminSocket(token!);
+            socket.emit('admin_join', { sessionId: activeSession.id });
+
+            if (activeSession.status === 'RUNNING') {
+                router.push('/admin/session');
+            }
+        } finally {
+            setRejoining(null);
+        }
+    }
 
     async function createSession() {
         if (!selectedScenario) return;
@@ -230,6 +279,40 @@ export default function AdminLobbyPage() {
                                     </div>
                                 );
                             })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Rejoin active sessions */}
+                {!session && activeSessions.length > 0 && (
+                    <div className="bg-white border border-amber-200 rounded-2xl overflow-hidden shadow-sm">
+                        <div className="px-6 py-4 border-b border-amber-100 bg-amber-50 flex items-center gap-2">
+                            <span className="text-amber-600">⚡</span>
+                            <h2 className="font-semibold text-gray-900">Actieve sessies</h2>
+                            <span className="text-amber-600 text-xs ml-1">— herneem een lopende sessie</span>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            {activeSessions.map((s) => (
+                                <div key={s.id} className="px-6 py-4 flex items-center justify-between gap-4">
+                                    <div>
+                                        <p className="font-medium text-gray-900">{s.scenario?.title ?? 'Onbekend scenario'}</p>
+                                        <p className="text-sm text-gray-500 font-mono mt-0.5">
+                                            Code: <span className="font-bold text-gray-700">{s.joinCode}</span>
+                                            <span className={`ml-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${s.status === 'RUNNING' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                {s.status === 'RUNNING' ? '▶ Actief' : '⏳ Lobby'}
+                                            </span>
+                                        </p>
+                                        <p className="text-xs text-gray-400 mt-0.5">{s.players?.length ?? 0} deelnemer(s)</p>
+                                    </div>
+                                    <button
+                                        onClick={() => rejoinSession(s)}
+                                        disabled={rejoining === s.id}
+                                        className="bg-amber-500 hover:bg-amber-600 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl px-5 py-2 text-sm transition shrink-0"
+                                    >
+                                        {rejoining === s.id ? 'Laden...' : 'Herneem sessie'}
+                                    </button>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}

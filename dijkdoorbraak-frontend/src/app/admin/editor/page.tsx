@@ -48,6 +48,7 @@ interface Scenario {
     customOverlays: MapOverlay[] | null;
     incidentLat: number | null;
     incidentLng: number | null;
+    scenarioTime: string | null;
     Injects: Inject[];
 }
 
@@ -101,7 +102,7 @@ export default function EditorPage() {
     // ── Scenario ───────────────────────────────────────────────────
     const [scenarios, setScenarios] = useState<Scenario[]>([]);
     const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
-    const [scenarioForm, setScenarioForm] = useState({ title: '', description: '' });
+    const [scenarioForm, setScenarioForm] = useState({ title: '', description: '', scenarioTime: '' });
     const [editingScenario, setEditingScenario] = useState<string | null>(null);
     const [savingScenario, setSavingScenario] = useState(false);
 
@@ -109,6 +110,7 @@ export default function EditorPage() {
     const [injectForm, setInjectForm] = useState({ title: '', content: '', triggerTime: '', targetRole: '', variant: 'alert' });
     const [editingInject, setEditingInject] = useState<Inject | null>(null);
     const [savingInject, setSavingInject] = useState(false);
+    const [previewInject, setPreviewInject] = useState<Inject | null>(null);
 
     // ── Phases ─────────────────────────────────────────────────────
     const [phases, setPhases] = useState<EscalationPhase[]>([]);
@@ -120,6 +122,7 @@ export default function EditorPage() {
     const [feedbackQuestions, setFeedbackQuestions] = useState<FeedbackQuestion[]>([]);
     const [feedbackQuestionInput, setFeedbackQuestionInput] = useState('');
     const [savingFeedbackQuestion, setSavingFeedbackQuestion] = useState(false);
+    const [editingFeedbackQuestion, setEditingFeedbackQuestion] = useState<{ id: string; text: string } | null>(null);
 
     // ── Incident location ──────────────────────────────────────────
     const [incidentLat, setIncidentLat] = useState(INCIDENT_LOCATION[0]);
@@ -204,7 +207,7 @@ export default function EditorPage() {
             await loadScenario(created.id);
         }
         setEditingScenario(null);
-        setScenarioForm({ title: '', description: '' });
+        setScenarioForm({ title: '', description: '', scenarioTime: '' });
         await loadScenarios();
         setSavingScenario(false);
     }
@@ -218,12 +221,12 @@ export default function EditorPage() {
 
     function startEditScenario(s: Scenario) {
         setEditingScenario(s.id);
-        setScenarioForm({ title: s.title, description: s.description ?? '' });
+        setScenarioForm({ title: s.title, description: s.description ?? '', scenarioTime: s.scenarioTime ?? '' });
     }
 
     function cancelScenarioEdit() {
         setEditingScenario(null);
-        setScenarioForm({ title: '', description: '' });
+        setScenarioForm({ title: '', description: '', scenarioTime: '' });
     }
 
     // ── Inject helpers ─────────────────────────────────────────────
@@ -307,6 +310,39 @@ export default function EditorPage() {
         if (!selectedScenario) return;
         await fetch(`${BACKEND_URL}/scenarios/${selectedScenario.id}/feedback-questions/${id}`, { method: 'DELETE' });
         setFeedbackQuestions((prev) => prev.filter((q) => q.id !== id));
+    }
+
+    async function saveFeedbackQuestionEdit() {
+        if (!selectedScenario || !editingFeedbackQuestion?.text.trim()) return;
+        // No dedicated PATCH endpoint for question text — delete + recreate preserving order
+        const q = feedbackQuestions.find((x) => x.id === editingFeedbackQuestion.id);
+        if (!q) return;
+        await fetch(`${BACKEND_URL}/scenarios/${selectedScenario.id}/feedback-questions/${q.id}`, { method: 'DELETE' });
+        const res = await fetch(`${BACKEND_URL}/scenarios/${selectedScenario.id}/feedback-questions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: editingFeedbackQuestion.text.trim(), order: q.order }),
+        });
+        const updated = await res.json();
+        setFeedbackQuestions((prev) => prev.map((x) => x.id === q.id ? updated : x));
+        setEditingFeedbackQuestion(null);
+    }
+
+    async function moveFeedbackQuestion(id: string, direction: 'up' | 'down') {
+        if (!selectedScenario) return;
+        const idx = feedbackQuestions.findIndex((q) => q.id === id);
+        if (idx < 0) return;
+        const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (swapIdx < 0 || swapIdx >= feedbackQuestions.length) return;
+        const reordered = [...feedbackQuestions];
+        [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
+        const withOrder = reordered.map((q, i) => ({ ...q, order: i }));
+        setFeedbackQuestions(withOrder);
+        await fetch(`${BACKEND_URL}/scenarios/${selectedScenario.id}/feedback-questions/reorder`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: withOrder.map((q) => ({ id: q.id, order: q.order })) }),
+        });
     }
 
     // ── Location helpers ───────────────────────────────────────────
@@ -560,6 +596,12 @@ export default function EditorPage() {
                                         className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" />
                                     <textarea value={scenarioForm.description} onChange={e => setScenarioForm({ ...scenarioForm, description: e.target.value })} placeholder="Beschrijving (optioneel)" rows={3}
                                         className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none text-sm" />
+                                    <div className="flex items-center gap-3">
+                                        <label className="text-sm text-gray-600 whitespace-nowrap">Scenario tijd</label>
+                                        <input value={scenarioForm.scenarioTime} onChange={e => setScenarioForm({ ...scenarioForm, scenarioTime: e.target.value })} placeholder="bv. 14:30" maxLength={8}
+                                            className="w-32 bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-mono" />
+                                        <span className="text-xs text-gray-400">De fictieve klok van het scenario (getoond op spelerscherm)</span>
+                                    </div>
                                     <div className="flex gap-3">
                                         <button onClick={saveScenario} disabled={!scenarioForm.title.trim() || savingScenario}
                                             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white font-semibold rounded-xl px-5 py-2 text-sm transition">
@@ -647,6 +689,7 @@ export default function EditorPage() {
                                                         <p className="text-gray-400 text-xs mt-0.5 truncate">{inject.content}</p>
                                                     </div>
                                                     <div className="flex gap-2 shrink-0">
+                                                        <button onClick={() => setPreviewInject(inject)} className="text-blue-400 hover:text-blue-600 text-xs transition" title="Voorbeeld">👁</button>
                                                         <button onClick={() => startEditInject(inject)} className="text-gray-400 hover:text-gray-900 text-xs transition">✎</button>
                                                         <button onClick={() => deleteInject(inject.id)} className="text-red-500 hover:text-red-600 text-xs transition">✕</button>
                                                     </div>
@@ -759,10 +802,31 @@ export default function EditorPage() {
 
                                         <div className="space-y-1.5">
                                             {feedbackQuestions.map((q, i) => (
-                                                <div key={q.id} className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 flex items-center gap-3">
-                                                    <span className="text-gray-400 text-xs font-mono shrink-0">{i + 1}</span>
-                                                    <p className="flex-1 text-sm text-gray-800">{q.question}</p>
-                                                    <button onClick={() => deleteFeedbackQuestion(q.id)} className="text-red-400 hover:text-red-600 text-xs transition shrink-0">✕</button>
+                                                <div key={q.id} className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 space-y-1.5">
+                                                    {editingFeedbackQuestion?.id === q.id ? (
+                                                        <div className="flex gap-2">
+                                                            <input
+                                                                autoFocus
+                                                                value={editingFeedbackQuestion.text}
+                                                                onChange={(e) => setEditingFeedbackQuestion({ ...editingFeedbackQuestion, text: e.target.value })}
+                                                                onKeyDown={(e) => { if (e.key === 'Enter') saveFeedbackQuestionEdit(); if (e.key === 'Escape') setEditingFeedbackQuestion(null); }}
+                                                                className="flex-1 bg-white border border-blue-400 rounded-lg px-2.5 py-1 text-gray-900 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                            />
+                                                            <button onClick={saveFeedbackQuestionEdit} className="text-blue-600 hover:text-blue-800 text-xs font-semibold transition">✓</button>
+                                                            <button onClick={() => setEditingFeedbackQuestion(null)} className="text-gray-400 hover:text-gray-600 text-xs transition">✕</button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="flex flex-col gap-0.5 shrink-0">
+                                                                <button onClick={() => moveFeedbackQuestion(q.id, 'up')} disabled={i === 0} className="text-gray-300 hover:text-gray-500 disabled:opacity-0 text-xs leading-none transition">▲</button>
+                                                                <button onClick={() => moveFeedbackQuestion(q.id, 'down')} disabled={i === feedbackQuestions.length - 1} className="text-gray-300 hover:text-gray-500 disabled:opacity-0 text-xs leading-none transition">▼</button>
+                                                            </div>
+                                                            <span className="text-gray-400 text-xs font-mono w-4 shrink-0">{i + 1}</span>
+                                                            <p className="flex-1 text-sm text-gray-800">{q.question}</p>
+                                                            <button onClick={() => setEditingFeedbackQuestion({ id: q.id, text: q.question })} className="text-gray-400 hover:text-gray-700 text-xs transition shrink-0">✎</button>
+                                                            <button onClick={() => deleteFeedbackQuestion(q.id)} className="text-red-400 hover:text-red-600 text-xs transition shrink-0">✕</button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -1069,6 +1133,62 @@ export default function EditorPage() {
                     </div>
                 </div>
             )}
+        {/* ── Inject preview modal ── */}
+        {previewInject && (() => {
+            const v = INJECT_VARIANT_STYLES[(previewInject.variant as InjectVariant) ?? 'alert'];
+            return (
+                <div
+                    className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center px-4"
+                    onClick={() => setPreviewInject(null)}
+                >
+                    <div
+                        className="w-full max-w-sm space-y-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <p className="text-white/60 text-xs text-center uppercase tracking-widest">Voorbeeld — zo ziet de speler het</p>
+
+                        {/* Toast preview */}
+                        <div className={`${v.toastBg} border ${v.toastBorder} rounded-2xl px-5 py-4 shadow-xl`}>
+                            <div className="flex items-start gap-3">
+                                <div className={`w-2 h-2 rounded-full ${v.toastDot} animate-pulse mt-1.5 shrink-0`} />
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-base leading-none">{v.icon}</span>
+                                        <p className={`${v.toastLabelColor} text-xs uppercase tracking-widest font-medium`}>{v.label}</p>
+                                        {previewInject.targetRole && (
+                                            <span className="bg-white/20 text-white text-xs font-mono px-1.5 py-0.5 rounded">→ {previewInject.targetRole}</span>
+                                        )}
+                                    </div>
+                                    <p className="text-white font-bold text-sm">{previewInject.title || '(geen titel)'}</p>
+                                    <p className={`${v.toastSubColor} text-xs mt-1 line-clamp-2`}>{previewInject.content || '(geen inhoud)'}</p>
+                                    <p className={`${v.toastLabelColor} text-xs mt-2`}>Tik voor details</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal preview */}
+                        <div className="bg-white rounded-2xl p-5 shadow-xl space-y-3">
+                            <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${v.accentDot}`} />
+                                <p className={`${v.accentLabel} text-xs uppercase tracking-widest font-semibold`}>{v.icon} {v.label}</p>
+                            </div>
+                            <h3 className="text-gray-900 font-bold text-lg">{previewInject.title || '(geen titel)'}</h3>
+                            <p className="text-gray-600 text-sm leading-relaxed">{previewInject.content || '(geen inhoud)'}</p>
+                            {previewInject.targetRole && (
+                                <p className="text-blue-600 text-xs font-medium">Gericht aan: {previewInject.targetRole}</p>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={() => setPreviewInject(null)}
+                            className="w-full text-white/60 hover:text-white text-sm transition py-2"
+                        >
+                            ✕ Sluiten
+                        </button>
+                    </div>
+                </div>
+            );
+        })()}
         </main>
     );
 }

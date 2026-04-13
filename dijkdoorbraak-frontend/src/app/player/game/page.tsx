@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSocket } from '@/lib/socket';
 import { useGameStore, MapOverlay } from '@/lib/store';
@@ -10,15 +10,26 @@ import InjectToast from '@/components/player/InjectToast';
 import InjectModal from '@/components/player/InjectModal';
 import InjectHistoryPanel from '@/components/player/InjectHistoryPanel';
 import RoleDetailPanel from '@/components/player/RoleDetailPanel';
+import { QRCodeSVG } from 'qrcode.react';
 
 const GameMap = dynamic(() => import('@/components/player/GameMap'), { ssr: false });
 
+function formatTimer(ms: number): string {
+    const totalSec = Math.ceil(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 export default function GamePage() {
     const router = useRouter();
-    const { player, session, addInject, addToast, setActiveInject, addOverlay, setOverlays, overlays, pendingPin, setPendingPin, incidentLocation } = useGameStore();
+    const { player, session, addInject, addToast, setActiveInject, addOverlay, setOverlays, overlays, pendingPin, setPendingPin, incidentLocation, scenarioTime, timerMs, timerRunning, timerUpdatedAt, setTimer } = useGameStore();
+    const [displayMs, setDisplayMs] = useState<number | null>(null);
+    const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [actionFeedback, setActionFeedback] = useState<{ approved: boolean; response: string | null } | null>(null);
     const [pinPublished, setPinPublished] = useState(false);
     const [showRoleDetail, setShowRoleDetail] = useState(false);
+    const [showRejoinQR, setShowRejoinQR] = useState(false);
 
     useEffect(() => {
         if (!player || !session) {
@@ -27,6 +38,14 @@ export default function GamePage() {
         }
 
         const socket = getSocket();
+
+        // Re-register with the server on every (re)connect so the DB socketId and
+        // socket room stay up-to-date even after a network drop or page refresh.
+        function registerWithServer() {
+            socket.emit('rejoin_lobby', { sessionId: session!.id, playerId: player!.id });
+        }
+        socket.on('connect', registerWithServer);
+        if (socket.connected) registerWithServer();
 
         socket.on('inject_received', (data: { inject: any; playerId?: string }) => {
             addInject(data.inject);
@@ -56,23 +75,71 @@ export default function GamePage() {
             }
         });
 
+        socket.on('timer_update', (data: { remainingMs: number; running: boolean }) => {
+            setTimer(data.remainingMs, data.running);
+        });
+
         socket.on('scenario_stopped', () => {
             router.push('/player/feedback');
         });
 
         return () => {
+            socket.off('connect', registerWithServer);
             socket.off('inject_received');
             socket.off('action_response');
             socket.off('map_update');
             socket.off('overlays_set');
+            socket.off('timer_update');
             socket.off('scenario_stopped');
         };
     }, [player, session]);
+
+    // Local countdown: tick every 500 ms when timerRunning, sync from store
+    useEffect(() => {
+        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+        if (timerMs === null) { setDisplayMs(null); return; }
+        if (!timerRunning) { setDisplayMs(timerMs); return; }
+        // Compute how much time has elapsed since the store was last updated
+        const elapsed = timerUpdatedAt ? Date.now() - timerUpdatedAt : 0;
+        const initial = Math.max(0, timerMs - elapsed);
+        setDisplayMs(initial);
+        if (initial === 0) return;
+        timerIntervalRef.current = setInterval(() => {
+            setDisplayMs((prev) => {
+                if (prev === null || prev <= 0) {
+                    clearInterval(timerIntervalRef.current!);
+                    return 0;
+                }
+                return prev - 500;
+            });
+        }, 500);
+        return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
+    }, [timerMs, timerRunning, timerUpdatedAt]);
 
     return (
         <main className="relative w-full h-dvh overflow-hidden bg-gray-100">
             {/* Map fills the screen */}
             <GameMap overlays={overlays} pendingPin={pendingPin} incidentLocation={incidentLocation} />
+
+            {/* Scenario time badge — top right, small and unobtrusive */}
+            {scenarioTime && (
+                <div className="absolute top-4 right-4 z-10 bg-black/60 backdrop-blur rounded-lg px-3 py-1.5 text-white font-mono text-sm font-semibold shadow">
+                    🕐 {scenarioTime}
+                </div>
+            )}
+
+            {/* Game timer — center top, only shown when a timer is set */}
+            {displayMs !== null && (
+                <div className={`absolute top-4 left-1/2 -translate-x-1/2 z-10 px-5 py-2 rounded-xl shadow-lg font-mono font-bold text-xl tracking-widest transition ${
+                    displayMs <= 60000
+                        ? 'bg-red-600 text-white animate-pulse'
+                        : displayMs <= 180000
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-white/90 backdrop-blur text-gray-900 border border-gray-200'
+                }`}>
+                    {formatTimer(displayMs)}
+                </div>
+            )}
 
             {/* Role badge top left — tappable to open detail */}
             {player?.role && (
@@ -128,6 +195,44 @@ export default function GamePage() {
                 }`}>
                     {actionFeedback.approved ? '✓ Actie goedgekeurd' : '✗ Actie afgewezen'}
                     {actionFeedback.response && <span className="ml-2 font-normal">— {actionFeedback.response}</span>}
+                </div>
+            )}
+
+            {/* Rejoin QR button — bottom-left corner */}
+            {session && (
+                <button
+                    onClick={() => setShowRejoinQR(true)}
+                    className="absolute bottom-4 left-4 z-10 bg-white/80 backdrop-blur border border-gray-200 rounded-xl px-3 py-2 shadow-sm text-gray-500 text-xs hover:bg-white transition"
+                    title="Toon QR-code om opnieuw in te loggen"
+                >
+                    ⟳ QR
+                </button>
+            )}
+
+            {/* Rejoin QR modal */}
+            {showRejoinQR && session && (
+                <div
+                    className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-6"
+                    onClick={() => setShowRejoinQR(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl max-w-xs w-full"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <p className="text-gray-500 text-xs uppercase tracking-widest">Opnieuw deelnemen</p>
+                        <QRCodeSVG
+                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/player/join?code=${session.joinCode}`}
+                            size={200}
+                        />
+                        <p className="text-gray-900 text-4xl font-mono font-bold tracking-widest">{session.joinCode}</p>
+                        <p className="text-gray-400 text-xs text-center">Scan om opnieuw deel te nemen met dezelfde naam</p>
+                        <button
+                            onClick={() => setShowRejoinQR(false)}
+                            className="text-gray-400 hover:text-gray-700 text-sm transition"
+                        >
+                            ✕ Sluiten
+                        </button>
+                    </div>
                 </div>
             )}
 

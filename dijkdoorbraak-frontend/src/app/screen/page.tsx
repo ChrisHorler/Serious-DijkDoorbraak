@@ -1,0 +1,193 @@
+'use client';
+
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import { connectSocket } from '@/lib/socket';
+import type { MapOverlay } from '@/lib/store';
+
+const GameMap = dynamic(() => import('@/components/player/GameMap'), { ssr: false });
+
+function formatTimer(ms: number): string {
+    const totalSec = Math.ceil(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function ScreenContent() {
+    const searchParams = useSearchParams();
+    const [joinCode, setJoinCode] = useState('');
+    const [codeInput, setCodeInput] = useState('');
+    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [overlays, setOverlays] = useState<MapOverlay[]>([]);
+    const [error, setError] = useState('');
+    const [connecting, setConnecting] = useState(false);
+
+    // Timer state
+    const [timerMs, setTimerMs] = useState<number | null>(null);
+    const [timerRunning, setTimerRunning] = useState(false);
+    const [timerUpdatedAt, setTimerUpdatedAt] = useState<number | null>(null);
+    const [displayMs, setDisplayMs] = useState<number | null>(null);
+    const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // Read code from URL on load
+    useEffect(() => {
+        const code = searchParams.get('code');
+        if (code) {
+            setJoinCode(code.toUpperCase());
+            setCodeInput(code.toUpperCase());
+        }
+    }, [searchParams]);
+
+    // Auto-connect when code comes from URL
+    useEffect(() => {
+        if (joinCode) connect(joinCode);
+    }, [joinCode]);
+
+    function connect(code: string) {
+        setConnecting(true);
+        setError('');
+        const socket = connectSocket();
+
+        socket.emit('spectator_join', { joinCode: code }, (res: any) => {
+            setConnecting(false);
+            if (!res.success) {
+                setError(res.message || 'Ongeldige code.');
+                return;
+            }
+            setSessionId(res.sessionId);
+            setOverlays(Array.isArray(res.currentOverlays) ? res.currentOverlays : []);
+            if (res.currentTimer) {
+                setTimerMs(res.currentTimer.remainingMs);
+                setTimerRunning(res.currentTimer.running);
+                setTimerUpdatedAt(Date.now());
+            }
+        });
+
+        socket.on('overlays_set', (data: { overlays: MapOverlay[] }) => {
+            setOverlays(data.overlays);
+        });
+
+        socket.on('map_update', (data: { overlay: MapOverlay }) => {
+            setOverlays((prev) =>
+                prev.some((o) => o.id === data.overlay.id)
+                    ? prev.filter((o) => o.id !== data.overlay.id)
+                    : [...prev, data.overlay]
+            );
+        });
+
+        socket.on('timer_update', (data: { remainingMs: number; running: boolean }) => {
+            setTimerMs(data.remainingMs);
+            setTimerRunning(data.running);
+            setTimerUpdatedAt(Date.now());
+        });
+
+        socket.on('scenario_stopped', () => {
+            setSessionId(null);
+            setOverlays([]);
+            setTimerMs(null);
+            setTimerRunning(false);
+        });
+
+        return () => {
+            socket.off('overlays_set');
+            socket.off('map_update');
+            socket.off('timer_update');
+            socket.off('scenario_stopped');
+        };
+    }
+
+    // Local countdown
+    useEffect(() => {
+        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+        if (timerMs === null) { setDisplayMs(null); return; }
+        if (!timerRunning) { setDisplayMs(timerMs); return; }
+        const elapsed = timerUpdatedAt ? Date.now() - timerUpdatedAt : 0;
+        const initial = Math.max(0, timerMs - elapsed);
+        setDisplayMs(initial);
+        if (initial === 0) return;
+        timerIntervalRef.current = setInterval(() => {
+            setDisplayMs((prev) => {
+                if (prev === null || prev <= 0) {
+                    clearInterval(timerIntervalRef.current!);
+                    return 0;
+                }
+                return prev - 500;
+            });
+        }, 500);
+        return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
+    }, [timerMs, timerRunning, timerUpdatedAt]);
+
+    // Code entry screen
+    if (!sessionId) {
+        return (
+            <main className="min-h-screen bg-gray-900 flex flex-col items-center justify-center px-6">
+                <div className="w-full max-w-sm space-y-6">
+                    <div className="text-center space-y-2">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-2">
+                            <span className="text-white text-3xl">🌊</span>
+                        </div>
+                        <h1 className="text-3xl font-bold text-white tracking-tight">Dijkdoorbraak</h1>
+                        <p className="text-gray-400 text-sm">Projectiescherm — voer sessiecode in</p>
+                    </div>
+
+                    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6 space-y-4">
+                        <input
+                            type="text"
+                            value={codeInput}
+                            onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+                            placeholder="SESSIECODE"
+                            maxLength={6}
+                            className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white text-xl font-mono tracking-widest uppercase text-center placeholder:text-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                            onKeyDown={(e) => e.key === 'Enter' && connect(codeInput)}
+                        />
+
+                        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+
+                        <button
+                            onClick={() => connect(codeInput)}
+                            disabled={connecting || !codeInput.trim()}
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-semibold rounded-xl py-3 transition"
+                        >
+                            {connecting ? 'Verbinden...' : 'Verbinden'}
+                        </button>
+                    </div>
+                </div>
+            </main>
+        );
+    }
+
+    // Fullscreen map + timer
+    return (
+        <main className="relative w-full h-dvh overflow-hidden bg-black">
+            <GameMap overlays={overlays} />
+
+            {/* Timer overlay — center top */}
+            {displayMs !== null && (
+                <div className={`absolute top-6 left-1/2 -translate-x-1/2 z-10 px-8 py-3 rounded-2xl shadow-2xl font-mono font-bold text-5xl tracking-widest transition ${
+                    displayMs <= 60000
+                        ? 'bg-red-600 text-white animate-pulse'
+                        : displayMs <= 180000
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-black/70 backdrop-blur text-white border border-white/20'
+                }`}>
+                    {formatTimer(displayMs)}
+                </div>
+            )}
+
+            {/* Session code badge — bottom right, subtle */}
+            <div className="absolute bottom-4 right-4 z-10 bg-black/50 backdrop-blur rounded-lg px-3 py-1.5 text-white/60 font-mono text-xs">
+                {joinCode}
+            </div>
+        </main>
+    );
+}
+
+export default function ScreenPage() {
+    return (
+        <Suspense>
+            <ScreenContent />
+        </Suspense>
+    );
+}

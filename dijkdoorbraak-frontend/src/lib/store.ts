@@ -152,6 +152,16 @@ interface GameStore {
     feedbackQuestions: FeedbackQuestion[];
     setFeedbackQuestions: (questions: FeedbackQuestion[]) => void;
 
+    // Scenario time label (e.g. "14:30") — the fictional clock in the scenario
+    scenarioTime: string | null;
+    setScenarioTime: (t: string | null) => void;
+
+    // Game timer — driven by admin, synced via socket
+    timerMs: number | null;
+    timerRunning: boolean;
+    timerUpdatedAt: number | null; // local timestamp when timerMs was last set
+    setTimer: (remainingMs: number, running: boolean) => void;
+
     // Reset
     reset: () => void;
 }
@@ -209,6 +219,14 @@ export const useGameStore = create<GameStore>() (
             pendingPin: null,
             setPendingPin: (pin) => set({ pendingPin: pin }),
 
+            scenarioTime: null,
+            setScenarioTime: (t) => set({ scenarioTime: t }),
+
+            timerMs: null,
+            timerRunning: false,
+            timerUpdatedAt: null,
+            setTimer: (remainingMs, running) => set({ timerMs: remainingMs, timerRunning: running, timerUpdatedAt: Date.now() }),
+
             reset: () => set({
                 session: null,
                 player: null,
@@ -220,6 +238,10 @@ export const useGameStore = create<GameStore>() (
                 incidentLocation: null,
                 feedbackQuestions: [],
                 pendingPin: null,
+                scenarioTime: null,
+                timerMs: null,
+                timerRunning: false,
+                timerUpdatedAt: null,
             }),
         }),
         {
